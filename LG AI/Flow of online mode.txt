@@ -1,0 +1,198 @@
+=====================================
+OPEN HOGWARTS - FULL ONLINE FLOW
+=====================================
+
+=====================================
+Phase 1: Game Launch → MainMenu Scene
+=====================================
+
+1. MainMenu scene loads
+
+2. GameObject "NetworkManager" is active
+   → NetworkManager.Start() executes:
+      - DontDestroyOnLoad(gameObject)  // persists across scenes
+      - Instance = this                // singleton reference
+      - Registers sceneLoaded callback (fallback, not used in normal flow)
+
+3. GameObject "Canvas" (with Menu.cs) is active
+   → Menu.Awake() executes:
+      - DontDestroyOnLoad(canvas)
+      - DontDestroyOnLoad(EventSystem)
+      - _instance = this
+      - Registers SceneManager.sceneLoaded += OnLevelFinishedLoading
+
+4. Menu.OnLevelFinishedLoading("MainMenu") fires:
+   → showPanel("MainPanel")
+
+5. MainPanel.OnEnable() fires:
+   → Checks DB: Service.db.SelectCount("FROM item") < 1?
+      - If yes → DBSetup.start() (inserts items, NPCs, etc.)
+   → Queries: Service.db.Select<CharacterData>("FROM characters")
+      - If character exists → shows name, level, JoinButton
+      - If no character → shows CreateButton
+
+=====================================
+Phase 2a: Create Character (if no character exists)
+=====================================
+
+6. User clicks "Create Character" button
+   → CreatePanel is shown
+
+7. User types name, selects house, clicks Create
+   → CreatePanel.createButton():
+      - Validates name (not empty, >= 3 chars)
+      - Initializes DB if needed
+      - Creates CharacterData (id=1, level=1, 270 HP, 100 mana, 100 gold)
+      - character.create() → inserts into iBoxDB
+      - Menu.Instance.showPanel("MainPanel") → goes back to MainPanel
+
+8. MainPanel.OnEnable() fires again:
+   → Now finds the character in DB
+   → Shows name, level, JoinButton
+
+=====================================
+Phase 2b: Join Game (character exists)
+=====================================
+
+9. User clicks "Join" button
+   → MainPanel.joinGame(characterId, name):
+      - Creates Hashtable with characterId
+      - PhotonNetwork.player.SetCustomProperties(h)
+      - PhotonNetwork.player.NickName = name
+      - NetworkManager.Instance.startConnection()
+
+=====================================
+Phase 3: Network Connection (Online Mode)
+=====================================
+
+10. NetworkManager.startConnection():
+    - useOffline == false (online mode)
+    - PhotonNetwork.ConnectUsingSettings("0.01")
+      → Photon SDK connects to Photon Cloud servers
+      → Handshake, authentication, etc.
+
+11. Photon connection succeeds
+    → Photon SDK automatically calls NetworkManager.OnJoinedLobby()
+       (because NetworkManager extends Photon.MonoBehaviour)
+
+=====================================
+Phase 4: Join Lobby → Load Hogwarts
+=====================================
+
+12. NetworkManager.OnJoinedLobby():
+    - PhotonNetwork.LoadLevel("Hogwarts")
+      → Internally calls SceneManager.LoadScene("Hogwarts")
+      → MainMenu scene unloads (except DontDestroyOnLoad objects)
+      → Hogwarts scene loads
+    - PhotonNetwork.JoinRandomRoom()
+      → Asks Photon server to join any available room
+
+=====================================
+Phase 5: Join/Create Room
+=====================================
+
+13a. If a room exists with space:
+    → Photon server assigns player to that room
+    → NetworkManager.OnJoinedRoom() is called
+    → Go to Phase 6
+
+13b. If NO room exists (JoinRandom fails):
+    → NetworkManager.OnPhotonRandomJoinFailed()
+       - PhotonNetwork.CreateRoom(null)  // creates a new room with random name
+    → Room is created on Photon server
+    → NetworkManager.OnJoinedRoom() is called
+    → Go to Phase 6
+
+=====================================
+Phase 6: Spawn Player in Hogwarts
+=====================================
+
+14. NetworkManager.OnJoinedRoom():
+    → spawnPlayer()
+
+15. NetworkManager.spawnPlayer():
+    - Queries DB: Service.db.Select<CharacterData>("FROM characters").FirstOrDefault()
+    - If character == null → error, abort
+
+    - PhotonNetwork.Instantiate("Characters/Player", position, rotation, 0)
+      → Loads prefab from Resources/Characters/Player
+      → Instantiates locally AND notifies all other players in the room
+      → Other players also instantiate this player's avatar on their side
+
+    - Sets up player GameObject:
+      a) player.GetComponent<Player>().characterData = character
+      b) Finds "Main Camera" child → sets CameraController.cameraTarget
+      c) Enables ThirdPersonUserControl (input)
+      d) Enables ThirdPersonCharacter (animation/physics)
+      e) Enables PlayerHotkeys (spell keybinds)
+      f) Enables PlayerCombat
+      g) Activates "Main Camera" child object
+      h) Deactivates "NamePlate" (own name not shown to self)
+      i) Sets MiniMapCamera target = player.transform
+      j) Sets MiniMapElementsCamera target = player.transform
+      k) Sets ConfigMenu.player reference
+      l) Sets Indicator texture (arrow on minimap)
+
+=====================================
+Phase 7: UI Switches to Gameplay HUD
+=====================================
+
+16. Menu.OnLevelFinishedLoading("Hogwarts") fires (scene != "MainMenu"):
+    → showPanel("PlayerPanel")       // HP/Mana orbs, XP bar
+    → showPanel("ChatPanel", false)  // Chat window (no hide others)
+    → showPanel("TopMenu", false)    // Config, inventory buttons
+    → showPanel("MiniMap", false)    // Minimap overlay
+
+=====================================
+Phase 8: Gameplay Active
+=====================================
+
+17. Player.Start():
+    - _instance = this (singleton)
+    - SkillsUI.Instance.displayUnlockedSkills()
+    - Starts health regeneration coroutine
+    - Starts mana regeneration coroutine
+    - Destroys trailRenderer on own player
+
+18. Player.Update() (every frame):
+    - Updates health bar lerp animation
+    - Checks if player fell below y=-100 → Respawn()
+
+19. ThirdPersonUserControl reads Input → moves character
+20. CameraController follows player transform
+21. PlayerHotkeys listens for spell/mount keybinds
+22. PlayerCombat handles targeting and damage
+23. NPCActivator enables/disables NPCs based on distance
+
+=====================================
+Summary Diagram
+=====================================
+
+MainMenu Scene                          Hogwarts Scene
+─────────────────                       ──────────────────
+CreatePanel                             
+  │ (create char + save to DB)          
+  ▼                                     
+MainPanel                               
+  │ (click Join)                        
+  ▼                                     
+NetworkManager.startConnection()        
+  │                                     
+  ▼                                     
+PhotonNetwork.ConnectUsingSettings()    
+  │ (connects to cloud)                 
+  ▼                                     
+OnJoinedLobby()                         
+  │── PhotonNetwork.LoadLevel() ──────► Hogwarts scene loads
+  │── PhotonNetwork.JoinRandomRoom()    
+  ▼                                       ▼
+OnJoinedRoom()                          Menu shows PlayerPanel/Chat/MiniMap
+  │                                     
+  ▼                                     
+spawnPlayer()                           
+  │                                     
+  ▼                                     
+Player prefab instantiated + configured 
+  │                                     
+  ▼                                     
+GAMEPLAY ACTIVE                         
