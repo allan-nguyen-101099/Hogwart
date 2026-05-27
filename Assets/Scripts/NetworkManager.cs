@@ -16,10 +16,22 @@ public class NetworkManager : Photon.MonoBehaviour
     bool useOffline;
     void Start()
     {
+        DontDestroyOnLoad(gameObject);
         Instance = this;
+        Debug.Log("NetworkManager initialized");
+        
+        // Auto-start connection if in offline mode and character exists
         SceneManager.sceneLoaded += (s, mode) =>
         {
-            if (s.name == Menu.defaultLevel) spawnPlayer();
+            if (s.name == Menu.defaultLevel)
+            {
+                Debug.Log($"Hogwarts scene loaded. Checking if should auto-start...");
+                if (useOffline && !PhotonNetwork.offlineMode)
+                {
+                    Debug.Log("Auto-starting offline connection...");
+                    startConnection();
+                }
+            }
         };
     }
 
@@ -55,15 +67,43 @@ public class NetworkManager : Photon.MonoBehaviour
         // var firstJoin = GameObject.Find("SpawnPoints/FirstJoin");//"FirstJoin"
         // var position = firstJoin.transform.position;//(633.51, 161.38, 415.70)
 
+        Debug.Log("spawnPlayer() called");
+        Debug.Log($"Offline Mode: {PhotonNetwork.offlineMode}");
+        
+        CharacterData character = Service.db.Select<CharacterData>("FROM characters").FirstOrDefault();
+        Debug.Log($"Character found: {(character != null ? character.name : "NULL")}");
+
+        if (character == null)
+        {
+            Debug.LogError("No character data found! Cannot spawn player.");
+            return;
+        }
+
         GameObject player = PhotonNetwork.Instantiate(
             "Characters/Player",
             new(633.51f, 161.38f, 415.70f),
             Quaternion.identity, 0);
 
-        // get character data
-        CharacterData character = Service.db.Select<CharacterData>("FROM characters").FirstOrDefault();
+        if (player == null)
+        {
+            Debug.LogError("Failed to instantiate player prefab!");
+            return;
+        }
+
         var playerComponent = player.GetComponent<Player>();
         playerComponent.characterData = character;
+
+        // Set camera target for CameraController
+        var mainCamera = player.transform.Find("Main Camera");
+        if (mainCamera != null)
+        {
+            var cameraController = mainCamera.GetComponent<CameraController>();
+            if (cameraController != null)
+            {
+                cameraController.cameraTarget = player.transform;
+                Debug.Log("Camera target set to player transform");
+            }
+        }
 
         player.GetComponent<UnityStandardAssets.Characters.ThirdPerson.ThirdPersonUserControl>().enabled = true;
         player.GetComponent<UnityStandardAssets.Characters.ThirdPerson.ThirdPersonCharacter>().enabled = true;
@@ -96,6 +136,7 @@ public class NetworkManager : Photon.MonoBehaviour
 
     void OnJoinedLobby()
     {
+        Debug.Log("OnJoinedLobby() called");
         PhotonNetwork.LoadLevel(Menu.defaultLevel);
         PhotonNetwork.JoinRandomRoom();
         //Menu.Instance.showPanel("LoadingPanel");
@@ -106,7 +147,13 @@ public class NetworkManager : Photon.MonoBehaviour
     //}
     void OnJoinedRoom()
     {
-
+        Debug.Log("OnJoinedRoom() called - about to spawn player");
+        spawnPlayer();
+    }
+    
+    void OnPhotonJoinRandomFailed(object[] codeAndMsg)
+    {
+        Debug.LogError("OnPhotonJoinRandomFailed called: " + codeAndMsg[0]);
     }
 
     void OnCreatedRoom()
