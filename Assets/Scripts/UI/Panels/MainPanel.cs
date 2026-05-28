@@ -27,6 +27,7 @@ public class MainPanel : MonoBehaviour {
          
             nickLabel.text = character.name;
 			LevelLabel.text = character.level.ToString();
+			JoinButton.onClick.RemoveAllListeners();
 			JoinButton.onClick.AddListener(
 				delegate {
 				this.joinGame(character.id, character.name);
