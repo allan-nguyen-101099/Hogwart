@@ -1,6 +1,12 @@
 - Need to check Camera Object in Player prefab:
-  - Does it have a CameraController script?
-  - Is the cameraTarget assigned correctly?
+  - Does it have a CameraController script? YES
+  - Is the cameraTarget assigned correctly? YES
+  - Why does the CameraChecker shows no Camera even though cachedCamera != null 
+
+LOG:
+Main Camera found at position: (633.51, 163.38, 411.67)
+[CameraChecker] Caching MainCamera: Main Camera at position (633.51, 163.38, 411.67)
+[CameraChecker] Cached MainCamera missing or disabled!
 
 
 - What decides the skill tree of the player? Is it based on the character class? If so, where is that logic implemented?

@@ -14,6 +14,8 @@ public class NetworkManager : Photon.MonoBehaviour
     public static NetworkManager Instance;
     [SerializeField]
     bool useOffline;
+
+    static bool called = false;
     void Start()
     {
         DontDestroyOnLoad(gameObject);
@@ -90,6 +92,10 @@ public class NetworkManager : Photon.MonoBehaviour
             return;
         }
 
+        if (player != null){
+            Debug.LogWarning($"Player instantiated at position: {player.transform.position}");
+        }
+
         var playerComponent = player.GetComponent<Player>();
         playerComponent.characterData = character;
 
@@ -107,13 +113,16 @@ public class NetworkManager : Photon.MonoBehaviour
         
         if (mainCamera != null)
         {
-            Debug.Log($"Main Camera found at position: {mainCamera.position}");
+            
+            Debug.LogWarning($"Main Camera found at position: {mainCamera.position}");
             
             var cameraComponent = mainCamera.GetComponent<Camera>();
+            CameraChecker.SetCamera(cameraComponent);
             if (cameraComponent != null)
             {
                 cameraComponent.enabled = true;
-                Debug.Log($"Camera component enabled. Near clip: {cameraComponent.nearClipPlane}, Far clip: {cameraComponent.farClipPlane}, Tag: {mainCamera.gameObject.tag}");
+                Debug.LogWarning($"Camera component enabled. Active: {cameraComponent.isActiveAndEnabled}, Near clip: {cameraComponent.nearClipPlane}, Far clip: {cameraComponent.farClipPlane}, Tag: {mainCamera.gameObject.tag}");
+                Debug.LogWarning($"Camera render flags: {cameraComponent.clearFlags}, Culling mask: {cameraComponent.cullingMask}");
             }
             else
             {
@@ -124,6 +133,14 @@ public class NetworkManager : Photon.MonoBehaviour
             if (cameraController != null)
             {
                 cameraController.cameraTarget = player.transform;
+                
+                // Fix: If desiredDistance is 0, set it to 6 so camera is not inside player
+                if (cameraController.desiredDistance <= 0)
+                {
+                    cameraController.desiredDistance = 6;
+                    Debug.Log("Camera desiredDistance was 0, set to 6");
+                }
+                
                 Debug.Log($"Camera target set to player. Player pos: {player.transform.position}");
                 
                 // Force camera to update
@@ -136,10 +153,6 @@ public class NetworkManager : Photon.MonoBehaviour
             
             mainCamera.gameObject.SetActive(true);
             Debug.Log($"Main Camera GameObject activated. Camera position: {mainCamera.position}, Player position: {player.transform.position}");
-            
-            // TEMPORARY: Move camera far away to test if anything renders
-            mainCamera.localPosition = new Vector3(0, 5, -15);
-            Debug.Log("TEMPORARY: Camera moved to test position (0, 5, -15)");
         }
         else
         {
@@ -204,7 +217,9 @@ public class NetworkManager : Photon.MonoBehaviour
     //}
     void OnJoinedRoom()
     {
-        Debug.Log("OnJoinedRoom() called - about to spawn player");
+        if (called) return;
+        called = true;
+        Debug.LogWarning("OnJoinedRoom() called - about to spawn player");
         spawnPlayer();
     }
     
