@@ -1,0 +1,13 @@
+- Need to check Camera Object in Player prefab:
+  - Does it have a CameraController script?
+  - Is the cameraTarget assigned correctly?
+
+
+- What decides the skill tree of the player? Is it based on the character class? If so, where is that logic implemented?
+  - When the player spawns, how does it determine which skills to show in the skill tree UI? Is there a mapping between character class and available skills?
+  - Is the skill tree data stored in the database, and if so, how is it retrieved and applied to the player character when they join the game?
+
+- Try spell Animator parameters:
+  - "isCasting" (bool): true when player is casting a spell, false otherwise
+  - "spellType" (int): 0 for Fireball, 1 for Frostbolt, etc. (set this when casting a spell)
+  - "castProgress" (float): 0 to 1 indicating how far along the cast is (update this every frame while casting)
