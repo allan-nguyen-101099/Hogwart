@@ -227,7 +227,16 @@ public class Player : Photon.MonoBehaviour {
         if (photonView.isMine)
         {
             _instance = this;
-            SkillsUI.Instance.displayUnlockedSkills();
+            
+            if (SkillsUI.Instance != null)
+            {
+                SkillsUI.Instance.displayUnlockedSkills();
+            }
+            else
+            {
+                Debug.LogWarning("SkillsUI.Instance not found");
+            }
+            
             startHealthRegeneration();
             startManaRegeneration();
 			Destroy (trailRenderer);

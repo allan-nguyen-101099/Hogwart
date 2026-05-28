@@ -10,7 +10,39 @@ public class CreatePanel : MonoBehaviour {
 	public Dropdown houseDropdown;
 	public Text errorText;
 
+	void OnEnable() {
+		// Auto-find UI elements if not assigned
+		if (nameInput == null) {
+			nameInput = GetComponentInChildren<InputField>();
+			if (nameInput == null) {
+				nameInput = GameObject.Find("Canvas/CreatePanel/NameInput")?.GetComponent<InputField>();
+			}
+		}
+		if (houseDropdown == null) {
+			houseDropdown = GetComponentInChildren<Dropdown>();
+			if (houseDropdown == null) {
+				houseDropdown = GameObject.Find("Canvas/CreatePanel/HouseDropdown")?.GetComponent<Dropdown>();
+			}
+		}
+		if (errorText == null) {
+			errorText = GetComponentInChildren<Text>();
+			if (errorText == null) {
+				errorText = GameObject.Find("Canvas/CreatePanel/ErrorText")?.GetComponent<Text>();
+			}
+		}
+	}
+
 	public void createButton () {
+		// Re-check for UI elements
+		if (nameInput == null) {
+			nameInput = GetComponentInChildren<InputField>();
+		}
+		
+		if (nameInput == null) {
+			Debug.LogError("Name Input field not found! Cannot create character.");
+			return;
+		}
+
 		string characterName = nameInput.text.Trim();
 
 		// Validate name

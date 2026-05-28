@@ -95,14 +95,55 @@ public class NetworkManager : Photon.MonoBehaviour
 
         // Set camera target for CameraController
         var mainCamera = player.transform.Find("Main Camera");
+        if (mainCamera == null)
+        {
+            Debug.LogWarning("Main Camera not found as child of player, searching for any Camera component");
+            var cameraInPlayer = player.GetComponentInChildren<Camera>();
+            if (cameraInPlayer != null)
+            {
+                mainCamera = cameraInPlayer.transform;
+            }
+        }
+        
         if (mainCamera != null)
         {
+            Debug.Log($"Main Camera found at position: {mainCamera.position}");
+            
+            var cameraComponent = mainCamera.GetComponent<Camera>();
+            if (cameraComponent != null)
+            {
+                cameraComponent.enabled = true;
+                Debug.Log($"Camera component enabled. Near clip: {cameraComponent.nearClipPlane}, Far clip: {cameraComponent.farClipPlane}, Tag: {mainCamera.gameObject.tag}");
+            }
+            else
+            {
+                Debug.LogError("No Camera component found on Main Camera GameObject!");
+            }
+            
             var cameraController = mainCamera.GetComponent<CameraController>();
             if (cameraController != null)
             {
                 cameraController.cameraTarget = player.transform;
-                Debug.Log("Camera target set to player transform");
+                Debug.Log($"Camera target set to player. Player pos: {player.transform.position}");
+                
+                // Force camera to update
+                cameraController.enabled = true;
             }
+            else
+            {
+                Debug.LogWarning("CameraController not found on Main Camera");
+            }
+            
+            mainCamera.gameObject.SetActive(true);
+            Debug.Log($"Main Camera GameObject activated. Camera position: {mainCamera.position}, Player position: {player.transform.position}");
+            
+            // TEMPORARY: Move camera far away to test if anything renders
+            mainCamera.localPosition = new Vector3(0, 5, -15);
+            Debug.Log("TEMPORARY: Camera moved to test position (0, 5, -15)");
+        }
+        else
+        {
+            Debug.LogError("Could not find camera on player!");
         }
 
         player.GetComponent<UnityStandardAssets.Characters.ThirdPerson.ThirdPersonUserControl>().enabled = true;
@@ -110,13 +151,29 @@ public class NetworkManager : Photon.MonoBehaviour
         //player.GetComponent<Motor> ().enabled = true;
         player.GetComponent<PlayerHotkeys>().enabled = true;
         player.GetComponent<PlayerCombat>().enabled = true;
-        player.transform.Find("Main Camera").gameObject.SetActive(true);
         player.transform.Find("NamePlate").gameObject.SetActive(false);
 
-        // Set minimap target
-        GameObject.Find("MiniMapCamera").GetComponent<MiniMap>().target = player.transform;
-        GameObject.Find("MiniMapElementsCamera").GetComponent<MiniMap>().target = player.transform;
-        var menu=GameObject.FindObjectOfType<ConfigMenu>();
+        // Set minimap target (with null checks)
+        var miniMapCamera = GameObject.Find("MiniMapCamera");
+        if (miniMapCamera != null)
+        {
+            var miniMap = miniMapCamera.GetComponent<MiniMap>();
+            if (miniMap != null)
+            {
+                miniMap.target = player.transform;
+            }
+        }
+
+        var miniMapElementsCamera = GameObject.Find("MiniMapElementsCamera");
+        if (miniMapElementsCamera != null)
+        {
+            var miniMapElements = miniMapElementsCamera.GetComponent<MiniMap>();
+            if (miniMapElements != null)
+            {
+                miniMapElements.target = player.transform;
+            }
+        }
+
         var configObj = GameObject.Find("Canvas/TopMenu/Config");
         var configMenu = configObj?.GetComponent<ConfigMenu>();
         if (configMenu is { }) configMenu.player = player;

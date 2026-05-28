@@ -17,7 +17,13 @@ public class PlayerCombat : MonoBehaviour {
 		spellList.Add((Spell)Resources.Load("Spells/Fireball"));
 		spellList.Add((Spell)Resources.Load("Spells/Frostbolt"));
 		spellList.Add((Spell)Resources.Load("Spells/Area test"));
-		SkillsUI.Instance.fillSlots();
+		
+		// Safely update UI if it exists
+		if (SkillsUI.Instance != null) {
+			SkillsUI.Instance.fillSlots();
+		} else {
+			Debug.LogWarning("SkillsUI.Instance not found during PlayerCombat initialization");
+		}
 	}
 
 	// for numeric hotkeys
