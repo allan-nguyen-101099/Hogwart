@@ -14,11 +14,11 @@ public class NetworkManager : Photon.MonoBehaviour
     public static NetworkManager Instance;
     [SerializeField]
     bool useOffline;
-
-    static bool called = false;
+    GameObject __player;
+    private float timer = 0f;
     void Start()
     {
-        DontDestroyOnLoad(gameObject);
+        // DontDestroyOnLoad(gameObject);
         Instance = this;
         Debug.Log("NetworkManager initialized");
         
@@ -35,6 +35,31 @@ public class NetworkManager : Photon.MonoBehaviour
                 }
             }
         };
+    }
+
+    void Update()
+    {
+        timer += Time.deltaTime;
+        if (timer >= 2f)
+        {
+            timer = 0f;
+
+            if (__player == null)
+            {
+                Debug.LogWarning("[NetworkManager] __player is null! It was destroyed or cleared.");
+                return;
+            }
+
+            var mainCamera = __player.transform.Find("Main Camera");
+            if (mainCamera != null)
+            {
+                Debug.LogWarning($"[NetworkManager] Main Camera found at position: {mainCamera.position}");
+            }
+            else
+            {
+                Debug.LogError("[NetworkManager] Main Camera not found as child of player!");
+            }
+        }
     }
 
     public static void validateGameVersion()
@@ -69,6 +94,7 @@ public class NetworkManager : Photon.MonoBehaviour
         // var firstJoin = GameObject.Find("SpawnPoints/FirstJoin");//"FirstJoin"
         // var position = firstJoin.transform.position;//(633.51, 161.38, 415.70)
 
+        Debug.Log("[NetworkManager.spawnPlayer()] ===== STARTING =====");
         Debug.Log("spawnPlayer() called");
         Debug.Log($"Offline Mode: {PhotonNetwork.offlineMode}");
         
@@ -81,23 +107,56 @@ public class NetworkManager : Photon.MonoBehaviour
             return;
         }
 
-        GameObject player = PhotonNetwork.Instantiate(
-            "Characters/Player",
-            new(633.51f, 161.38f, 415.70f),
-            Quaternion.identity, 0);
-
-        if (player == null)
+        Debug.Log("[NetworkManager.spawnPlayer()] About to enter try block");
+        
+        try
         {
-            Debug.LogError("Failed to instantiate player prefab!");
-            return;
-        }
+            Debug.Log("[NetworkManager.spawnPlayer()] Inside try block, about to instantiate");
+            GameObject player = PhotonNetwork.Instantiate(
+                "Characters/Player",
+                new(633.51f, 161.38f, 415.70f),
+                Quaternion.identity, 0);
 
-        if (player != null){
-            Debug.LogWarning($"Player instantiated at position: {player.transform.position}");
-        }
+            Debug.LogWarning("[NetworkManager.spawnPlayer()] PhotonNetwork.Instantiate() returned");
 
-        var playerComponent = player.GetComponent<Player>();
-        playerComponent.characterData = character;
+            if (player == null)
+            {
+                Debug.LogError("[NetworkManager] PhotonNetwork.Instantiate returned NULL!");
+                return;
+            }
+
+            Debug.LogWarning("[NetworkManager.spawnPlayer()] Player is not null");
+
+            __player = player;
+            Debug.LogWarning($"[NetworkManager] Player instantiated and stored. ID: {__player.GetInstanceID()}");
+
+            // Disable TimedObjectDestruction if it's on the player or children
+            var timedDestruction = player.GetComponent<TimedObjectDestruction>();
+            if (timedDestruction != null)
+            {
+                timedDestruction.enabled = false;
+                Debug.LogWarning("[NetworkManager] TimedObjectDestruction disabled on player!");
+            }
+
+            // Also check children
+            var timedDestructions = player.GetComponentsInChildren<TimedObjectDestruction>();
+            foreach (var td in timedDestructions)
+            {
+                td.enabled = false;
+                Debug.LogWarning($"[NetworkManager] TimedObjectDestruction disabled on child: {td.gameObject.name}");
+            }
+
+            if (player != null){
+                Debug.LogWarning($"Player instantiated at position: {player.transform.position}");
+            }
+
+            var playerComponent = player.GetComponent<Player>();
+            if (playerComponent == null)
+            {
+                Debug.LogError("[NetworkManager] Player component not found on instantiated prefab!");
+                return;
+            }
+            playerComponent.characterData = character;
 
         // Set camera target for CameraController
         var mainCamera = player.transform.Find("Main Camera");
@@ -159,11 +218,50 @@ public class NetworkManager : Photon.MonoBehaviour
             Debug.LogError("Could not find camera on player!");
         }
 
-        player.GetComponent<UnityStandardAssets.Characters.ThirdPerson.ThirdPersonUserControl>().enabled = true;
-        player.GetComponent<UnityStandardAssets.Characters.ThirdPerson.ThirdPersonCharacter>().enabled = true;
-        //player.GetComponent<Motor> ().enabled = true;
-        player.GetComponent<PlayerHotkeys>().enabled = true;
-        player.GetComponent<PlayerCombat>().enabled = true;
+        // Enable components with null checks
+        var thirdPersonControl = player.GetComponent<UnityStandardAssets.Characters.ThirdPerson.ThirdPersonUserControl>();
+        if (thirdPersonControl != null)
+        {
+            thirdPersonControl.enabled = true;
+            Debug.Log("[NetworkManager] ThirdPersonUserControl enabled");
+        }
+        else
+        {
+            Debug.LogWarning("[NetworkManager] ThirdPersonUserControl component not found on player!");
+        }
+
+        var thirdPersonChar = player.GetComponent<UnityStandardAssets.Characters.ThirdPerson.ThirdPersonCharacter>();
+        if (thirdPersonChar != null)
+        {
+            thirdPersonChar.enabled = true;
+            Debug.Log("[NetworkManager] ThirdPersonCharacter enabled");
+        }
+        else
+        {
+            Debug.LogWarning("[NetworkManager] ThirdPersonCharacter component not found on player!");
+        }
+
+        var playerHotkeys = player.GetComponent<PlayerHotkeys>();
+        if (playerHotkeys != null)
+        {
+            playerHotkeys.enabled = true;
+            Debug.Log("[NetworkManager] PlayerHotkeys enabled");
+        }
+        else
+        {
+            Debug.LogWarning("[NetworkManager] PlayerHotkeys component not found on player!");
+        }
+
+        var playerCombat = player.GetComponent<PlayerCombat>();
+        if (playerCombat != null)
+        {
+            playerCombat.enabled = true;
+            Debug.Log("[NetworkManager] PlayerCombat enabled");
+        }
+        else
+        {
+            Debug.LogWarning("[NetworkManager] PlayerCombat component not found on player!");
+        }
         player.transform.Find("NamePlate").gameObject.SetActive(false);
 
         // Set minimap target (with null checks)
@@ -191,8 +289,48 @@ public class NetworkManager : Photon.MonoBehaviour
         var configMenu = configObj?.GetComponent<ConfigMenu>();
         if (configMenu is { }) configMenu.player = player;
 
-        player.transform.Find("Indicator").GetComponent<Renderer>().material.mainTexture = mmarow;
+        // Set indicator texture with null checks
+        var indicator = player.transform.Find("Indicator");
+        if (indicator != null)
+        {
+            var renderer = indicator.GetComponent<Renderer>();
+            if (renderer != null && mmarow != null)
+            {
+                renderer.material.mainTexture = mmarow;
+                Debug.Log("[NetworkManager] Indicator texture set");
+            }
+            else
+            {
+                Debug.LogWarning("[NetworkManager] Renderer component or mmarow texture is null!");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[NetworkManager] Indicator child object not found!");
+        }
+        
+        Debug.LogWarning("[NetworkManager] spawnPlayer() completed successfully");
+        Debug.Log("[NetworkManager.spawnPlayer()] About to exit try block - NO EXCEPTION");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"[NetworkManager] *** EXCEPTION CAUGHT IN spawnPlayer() ***");
+            Debug.LogError($"[NetworkManager] Exception Type: {ex.GetType().Name}");
+            Debug.LogError($"[NetworkManager] Exception Message: {ex.Message}");
+            Debug.LogError($"[NetworkManager] Full Stack Trace:\n{ex.StackTrace}");
+            Debug.LogError($"[NetworkManager] Environment Stack Trace:\n{System.Environment.StackTrace}");
+            
+            if (__player != null)
+            {
+                Debug.LogError($"[NetworkManager] Destroying player due to exception!");
+                Destroy(__player);
+                __player = null;
+            }
+        }
+        
+        Debug.Log("[NetworkManager.spawnPlayer()] ===== COMPLETED =====");
     }
+    
     /*
 	void OnPhotonPlayerDisconnected(PhotonPlayer player)
 	{
@@ -217,8 +355,6 @@ public class NetworkManager : Photon.MonoBehaviour
     //}
     void OnJoinedRoom()
     {
-        if (called) return;
-        called = true;
         Debug.LogWarning("OnJoinedRoom() called - about to spawn player");
         spawnPlayer();
     }

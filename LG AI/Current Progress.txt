@@ -1,12 +1,34 @@
 - Need to check Camera Object in Player prefab:
   - Does it have a CameraController script? YES
   - Is the cameraTarget assigned correctly? YES
-  - Why does the CameraChecker shows no Camera even though cachedCamera != null 
+  - Why does the CameraChecker shows no Camera even though cachedCamera != null? Because player instance is destroyed immediate after created
+  - Why does onJoinedLobby get called twice? Because exists 2 versions of NetworkManager
+  - Why does player instance get destroyed immediate after?
 
 LOG:
+OnJoinedRoom() called - about to spawn player
+[NetworkManager] Player instantiated and stored. ID: -98480
+Player instantiated at position: (633.51, 161.38, 415.70)
 Main Camera found at position: (633.51, 163.38, 411.67)
 [CameraChecker] Caching MainCamera: Main Camera at position (633.51, 163.38, 411.67)
-[CameraChecker] Cached MainCamera missing or disabled!
+Camera component enabled. Active: True, Near clip: 0.2, Far clip: 2000, Tag: MainCamera
+Camera render flags: Skybox, Culling mask: -1
+[NetworkManager] spawnPlayer() completed successfully
+[NetworkManager] __player is null! It was destroyed or cleared.
+[NetworkManager] __player is null! It was destroyed or cleared.
+[NetworkManager] __player is null! It was destroyed or cleared.
+
+_____ new log
+[Player.Start()] isMine: True, Owner: 'abc' (master)
+[Player.Start()] This is MY player, setting up owner components
+SkillsUI.Instance not found
+[Player.Start()] Calling startHealthRegeneration()
+[Player.Start()] startHealthRegeneration() completed
+[Player.Start()] Calling startManaRegeneration()
+[Player.Start()] startManaRegeneration() completed
+[Player.Start()] Destroying trailRenderer
+[Player.Start()] Owner setup COMPLETED SUCCESSFULLY
+
 
 
 - What decides the skill tree of the player? Is it based on the character class? If so, where is that logic implemented?

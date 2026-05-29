@@ -221,63 +221,217 @@ public class Player : Photon.MonoBehaviour {
 
     private Vector3 correctPlayerPos = Vector3.zero;
     private Quaternion correctPlayerRot = Quaternion.identity;
+    private float creationTime;
 
+    void OnEnable()
+    {
+        creationTime = Time.realtimeSinceStartup;
+        Debug.LogWarning($"[Player.OnEnable()] GameObject enabled at {creationTime}");
+    }
+
+    void OnPhotonInstantiate(PhotonMessageInfo info)
+    {
+        Debug.LogWarning($"[Player.OnPhotonInstantiate()] Called! isMine: {photonView.isMine}");
+        Debug.LogWarning($"[Player.OnPhotonInstantiate()] photonView data: owner={photonView.owner}, viewID={photonView.viewID}");
+    }
+
+    void OnDisable()
+    {
+        Debug.LogError($"[Player.OnDisable()] GameObject disabled");
+    }
+
+    void OnDestroy()
+    {
+        float lifespan = Time.realtimeSinceStartup - creationTime;
+        Debug.LogError($"[Player.OnDestroy()] GameObject being destroyed! isMine: {photonView.isMine}, Lifespan: {lifespan}s");
+        Debug.LogError($"[Player.OnDestroy()] Full stack trace:\n{System.Environment.StackTrace}");
+    }
 
     void Start() {
-        if (photonView.isMine)
+        Debug.LogWarning($"[Player.Start()] isMine: {photonView.isMine}, Owner: {photonView.owner}");
+        
+        try
         {
-            _instance = this;
-            
-            if (SkillsUI.Instance != null)
+            if (photonView.isMine)
             {
-                SkillsUI.Instance.displayUnlockedSkills();
+                Debug.LogWarning("[Player.Start()] This is MY player, setting up owner components");
+                _instance = this;
+                
+                try
+                {
+                    if (SkillsUI.Instance != null)
+                    {
+                        Debug.LogWarning("[Player.Start()] Calling SkillsUI.displayUnlockedSkills()");
+                        SkillsUI.Instance.displayUnlockedSkills();
+                        Debug.LogWarning("[Player.Start()] SkillsUI.displayUnlockedSkills() completed");
+                    }
+                    else
+                    {
+                        Debug.LogWarning("SkillsUI.Instance not found");
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"[Player.Start()] Error in SkillsUI: {ex.Message}\n{ex.StackTrace}");
+                }
+
+                try
+                {
+                    Debug.LogWarning("[Player.Start()] Calling startHealthRegeneration()");
+                    startHealthRegeneration();
+                    Debug.LogWarning("[Player.Start()] startHealthRegeneration() completed");
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"[Player.Start()] Error in startHealthRegeneration: {ex.Message}\n{ex.StackTrace}");
+                }
+
+                try
+                {
+                    Debug.LogWarning("[Player.Start()] Calling startManaRegeneration()");
+                    startManaRegeneration();
+                    Debug.LogWarning("[Player.Start()] startManaRegeneration() completed");
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"[Player.Start()] Error in startManaRegeneration: {ex.Message}\n{ex.StackTrace}");
+                }
+
+                try
+                {
+                    if (trailRenderer != null)
+                    {
+                        Debug.LogWarning("[Player.Start()] Destroying trailRenderer");
+                        Destroy(trailRenderer);
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"[Player.Start()] Error destroying trailRenderer: {ex.Message}\n{ex.StackTrace}");
+                }
+
+                Debug.LogWarning("[Player.Start()] Owner setup COMPLETED SUCCESSFULLY");
             }
             else
             {
-                Debug.LogWarning("SkillsUI.Instance not found");
+                Debug.LogWarning("[Player.Start()] This is NOT my player, destroying non-owner components");
+                try
+                {
+                    if (Chat.Instance != null && photonView.owner != null)
+                    {
+                        Chat.Instance.LocalMsg("<color=\"#e8bf00\">[Sistema]</color> " + photonView.owner.NickName + " entró");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[Player.Start()] Chat.Instance or owner is null. Chat: {Chat.Instance != null}, Owner: {photonView.owner != null}");
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"[Player.Start()] Error sending chat message: {ex.Message}");
+                }
+
+                // Destroy non-owner components with null checks
+                var thirdPersonControl = GetComponent<UnityStandardAssets.Characters.ThirdPerson.ThirdPersonUserControl>();
+                if (thirdPersonControl != null) Destroy(thirdPersonControl);
+                
+                var thirdPersonChar = GetComponent<UnityStandardAssets.Characters.ThirdPerson.ThirdPersonCharacter>();
+                if (thirdPersonChar != null) Destroy(thirdPersonChar);
+                
+                var rigidbody = GetComponent<Rigidbody>();
+                if (rigidbody != null) Destroy(rigidbody);
+                
+                var npcActivator = GetComponent<NPCActivator>();
+                if (npcActivator != null) Destroy(npcActivator);
+                
+                var npcActivatorChild = gameObject.transform.Find("NPCActivator");
+                if (npcActivatorChild != null) Destroy(npcActivatorChild.gameObject);
+                
+                Debug.LogWarning("[Player.Start()] Non-owner setup completed");
             }
-            
-            startHealthRegeneration();
-            startManaRegeneration();
-			Destroy (trailRenderer);
-        } else {
-			Chat.Instance.LocalMsg("<color=\"#e8bf00\">[Sistema]</color> " + photonView.owner.NickName + " entró");
-            Destroy(GetComponent<UnityStandardAssets.Characters.ThirdPerson.ThirdPersonUserControl>());
-            Destroy(GetComponent<UnityStandardAssets.Characters.ThirdPerson.ThirdPersonCharacter>());
-            Destroy(GetComponent<Rigidbody>());
-			Destroy(GetComponent<NPCActivator>());
-            Destroy(gameObject.transform.Find("NPCActivator").gameObject);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"[Player.Start()] FATAL EXCEPTION: {ex.Message}\n{ex.StackTrace}");
+            Destroy(gameObject);
         }
     }
 
     void Update()
     {
-        if (!photonView.isMine) {
-            transform.position = Vector3.Lerp(transform.position, this.correctPlayerPos, Time.deltaTime * 5);
-            transform.rotation = Quaternion.Lerp(transform.rotation, this.correctPlayerRot, Time.deltaTime * 5);
-        } else {
-            if (!gotFirstUpdate) {
+        try
+        {
+            if (!photonView.isMine) {
+                transform.position = Vector3.Lerp(transform.position, this.correctPlayerPos, Time.deltaTime * 5);
+                transform.rotation = Quaternion.Lerp(transform.rotation, this.correctPlayerRot, Time.deltaTime * 5);
+            } else {
+                if (!gotFirstUpdate) {
+                    Debug.LogWarning("[Player.Update()] First update frame, setting up UI");
+                    
+                    try
+                    {
+                        Debug.LogWarning("[Player.Update()] Calling photonView.RPC setNick");
+                        photonView.RPC("setNick", PhotonTargets.OthersBuffered, PhotonNetwork.player.NickName);
+                        Debug.LogWarning("[Player.Update()] RPC setNick completed");
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogError($"[Player.Update()] Error in RPC setNick: {ex.Message}\n{ex.StackTrace}");
+                    }
 
-                photonView.RPC("setNick", PhotonTargets.OthersBuffered, PhotonNetwork.player.NickName);
+                    try
+                    {
+                        Debug.LogWarning("[Player.Update()] Finding health bar UI element");
+                        healthBar = GameObject.Find("Canvas/PlayerPanel/HP Orb Bg/HP").GetComponent<Image>();
+                        if (healthBar == null)
+                        {
+                            Debug.LogError("[Player.Update()] healthBar is NULL after finding!");
+                        }
+                        Debug.LogWarning("[Player.Update()] Health bar found");
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogError($"[Player.Update()] Error finding health bar: {ex.Message}\n{ex.StackTrace}");
+                    }
 
-                healthBar = GameObject.Find("Canvas/PlayerPanel/HP Orb Bg/HP").GetComponent<Image>();
+                    try
+                    {
+                        Debug.LogWarning("[Player.Update()] Updating PlayerPanel bars");
+                        if (PlayerPanel.Instance != null)
+                        {
+                            PlayerPanel.Instance.updateBar(PlayerPanel.BarType.Health, characterData.health, characterData.maxHealth);
+                            PlayerPanel.Instance.updateBar(PlayerPanel.BarType.Exp, characterData.exp, XP_BASE * level);
+                            PlayerPanel.Instance.updateBar(PlayerPanel.BarType.Mana, characterData.mana, characterData.maxMana);
+                            Debug.LogWarning("[Player.Update()] PlayerPanel bars updated");
+                        }
+                        else
+                        {
+                            Debug.LogError("[Player.Update()] PlayerPanel.Instance is NULL!");
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogError($"[Player.Update()] Error updating PlayerPanel: {ex.Message}\n{ex.StackTrace}");
+                    }
 
-                PlayerPanel.Instance.updateBar(PlayerPanel.BarType.Health, characterData.health, characterData.maxHealth);
-                PlayerPanel.Instance.updateBar(PlayerPanel.BarType.Exp, characterData.exp, XP_BASE * level);
-                PlayerPanel.Instance.updateBar(PlayerPanel.BarType.Mana, characterData.mana, characterData.maxMana);
+                    gotFirstUpdate = true;
+                    Debug.LogWarning("[Player.Update()] First update COMPLETED");
+                }
 
-                gotFirstUpdate = true;
+                if (healthBar != null && healthBar.fillAmount != health) {
+                    healthBar.fillAmount = Mathf.Lerp(healthBar.fillAmount, health / 270f, 4f * Time.deltaTime);
+                    namePlate.health.fillAmount = Mathf.Lerp(namePlate.health.fillAmount, health / 270f, 4f * Time.deltaTime);
+                }
+
+                //looks like player is falling
+                if (transform.position.y < -100) {
+                    Respawn();
+                }
             }
-
-            if (healthBar.fillAmount != health) {
-                healthBar.fillAmount = Mathf.Lerp(healthBar.fillAmount, health / 270f, 4f * Time.deltaTime);
-                namePlate.health.fillAmount = Mathf.Lerp(namePlate.health.fillAmount, health / 270f, 4f * Time.deltaTime);
-            }
-
-            //looks like player is falling
-            if (transform.position.y < -100) {
-                Respawn();
-            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"[Player.Update()] FATAL EXCEPTION: {ex.Message}\n{ex.StackTrace}");
         }
     }
 
@@ -370,49 +524,75 @@ public class Player : Photon.MonoBehaviour {
 
     void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
-        if (stream.isWriting)
+        try
         {
-            // We own this player: send the others our data
-            stream.SendNext(transform.position);
-            stream.SendNext(transform.rotation);
-            stream.SendNext(anim.GetFloat("Forward"));
-            stream.SendNext(anim.GetFloat("Turn"));
-            stream.SendNext(anim.GetFloat("Jump"));
-            stream.SendNext(anim.GetBool("OnGround"));
-            stream.SendNext(anim.GetBool("InvokeSpell"));
-            stream.SendNext(anim.GetInteger("SpellType"));
-			stream.SendNext(anim.GetBool("Broomstick"));
+            Debug.LogWarning($"[Player.OnPhotonSerializeView()] Called, isWriting: {stream.isWriting}, isMine: {photonView.isMine}");
+            
+            if (stream.isWriting)
+            {
+                // We own this player: send the others our data
+                Debug.LogWarning("[Player.OnPhotonSerializeView()] Writing data");
+                stream.SendNext(transform.position);
+                stream.SendNext(transform.rotation);
+                stream.SendNext(anim.GetFloat("Forward"));
+                stream.SendNext(anim.GetFloat("Turn"));
+                stream.SendNext(anim.GetFloat("Jump"));
+                stream.SendNext(anim.GetBool("OnGround"));
+                stream.SendNext(anim.GetBool("InvokeSpell"));
+                stream.SendNext(anim.GetInteger("SpellType"));
+                stream.SendNext(anim.GetBool("Broomstick"));
+                Debug.LogWarning("[Player.OnPhotonSerializeView()] Writing completed");
+            }
+            else
+            {
+                // Network player, receive data
+                Debug.LogWarning("[Player.OnPhotonSerializeView()] Reading data");
+                this.correctPlayerPos = (Vector3)stream.ReceiveNext();
+                this.correctPlayerRot = (Quaternion)stream.ReceiveNext();
+
+                if (anim) {
+                    anim.SetFloat("Forward", (float)stream.ReceiveNext());
+                    anim.SetFloat("Turn", (float)stream.ReceiveNext());
+                    anim.SetFloat("Jump", (float)stream.ReceiveNext());
+                    anim.SetBool("OnGround", (bool)stream.ReceiveNext());
+                    anim.SetBool("InvokeSpell", (bool)stream.ReceiveNext());
+                    anim.SetInteger("SpellType", (int)stream.ReceiveNext());
+                    broom = (bool)stream.ReceiveNext();
+                    anim.SetBool("Broomstick", broom);
+                }
+                else
+                {
+                    Debug.LogWarning("[Player.OnPhotonSerializeView()] Animator is null!");
+                }
+
+                Debug.LogWarning("[Player.OnPhotonSerializeView()] About to access PlayerHotkeys");
+                var playerHotkeys = gameObject.GetComponent<PlayerHotkeys>();
+                if (playerHotkeys != null && playerHotkeys.broom != null)
+                {
+                    if (broom) {
+                        playerHotkeys.broom.SetActive(true);
+                    } else {
+                        playerHotkeys.broom.SetActive(false);
+                    }
+                    Debug.LogWarning("[Player.OnPhotonSerializeView()] Broom status updated");
+                }
+                else
+                {
+                    Debug.LogWarning($"[Player.OnPhotonSerializeView()] PlayerHotkeys or broom is null! PlayerHotkeys: {playerHotkeys != null}, broom: {(playerHotkeys != null ? playerHotkeys.broom != null : false)}");
+                }
+
+                if (gotFirstUpdate == false) {
+                    transform.position = this.correctPlayerPos;
+                    transform.rotation = this.correctPlayerRot;
+                    gotFirstUpdate = true;
+                }
+                
+                Debug.LogWarning("[Player.OnPhotonSerializeView()] Reading completed");
+            }
         }
-        else
+        catch (System.Exception ex)
         {
-            // Network player, receive data
-            this.correctPlayerPos = (Vector3)stream.ReceiveNext();
-            this.correctPlayerRot = (Quaternion)stream.ReceiveNext();
-
-            if (anim) {
-                anim.SetFloat("Forward", (float)stream.ReceiveNext());
-                anim.SetFloat("Turn", (float)stream.ReceiveNext());
-                anim.SetFloat("Jump", (float)stream.ReceiveNext());
-                anim.SetBool("OnGround", (bool)stream.ReceiveNext());
-                anim.SetBool("InvokeSpell", (bool)stream.ReceiveNext());
-                anim.SetInteger("SpellType", (int)stream.ReceiveNext());
-				broom = (bool)stream.ReceiveNext();
-				anim.SetBool ("Broomstick", broom);
-            }
-
-			if (broom) {
-				gameObject.GetComponent<PlayerHotkeys> ().broom.SetActive (true);
-			} else {
-				gameObject.GetComponent<PlayerHotkeys> ().broom.SetActive (false);
-			}
-
-
-            if (gotFirstUpdate == false) {
-                transform.position = this.correctPlayerPos;
-                transform.rotation = this.correctPlayerRot;
-                gotFirstUpdate = true;
-            }
-
+            Debug.LogError($"[Player.OnPhotonSerializeView()] EXCEPTION: {ex.Message}\n{ex.StackTrace}");
         }
     }
 
