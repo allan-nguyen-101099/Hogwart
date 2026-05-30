@@ -27,11 +27,12 @@ public class NetworkManager : Photon.MonoBehaviour
         {
             if (s.name == Menu.defaultLevel)
             {
-                Debug.Log($"Hogwarts scene loaded. Checking if should auto-start...");
-                if (useOffline && !PhotonNetwork.offlineMode)
+                Debug.LogWarning($"Hogwarts scene loaded. Checking if should auto-start...");
+                if (useOffline)
                 {
-                    Debug.Log("Auto-starting offline connection...");
-                    startConnection();
+                    Debug.LogWarning("Auto-starting offline connection...");
+                    PhotonNetwork.JoinRandomRoom();
+                    // startConnection();
                 }
             }
         };
@@ -344,9 +345,9 @@ public class NetworkManager : Photon.MonoBehaviour
 
     void OnJoinedLobby()
     {
-        Debug.Log("OnJoinedLobby() called");
+        Debug.LogWarning("OnJoinedLobby() called");
         PhotonNetwork.LoadLevel(Menu.defaultLevel);
-        PhotonNetwork.JoinRandomRoom();
+        // PhotonNetwork.JoinRandomRoom();
         //Menu.Instance.showPanel("LoadingPanel");
     }
     //private void OnLevelWasLoaded(int level)
