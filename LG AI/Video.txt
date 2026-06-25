@@ -1,0 +1,344 @@
+=====================================================
+VIDEO STRUCTURE — HOGWARTS GAME DEMO (INTERVIEW)
+=====================================================
+Target audience: Senior game developers / technical hiring panel
+Recommended length: 8 to 12 minutes
+Tone: Confident, technically precise, honest about what is complete vs. in progress
+
+GOLDEN RULE FOR THIS VIDEO:
+  → Never show a bug without immediately explaining how you solved it or how you'd solve it.
+  → Never say "this is just a prototype" — say "this is the current iteration."
+  → Show code when talking about systems. It proves the work is yours.
+
+=====================================================
+SECTION 1 — THE HOOK (0:00 – 0:45)
+"What you're about to see"
+=====================================================
+
+PURPOSE: Grab attention immediately. Do not start with slides or talking.
+
+- Open directly with GAMEPLAY FOOTAGE (no intro text, no logo):
+    → Character walking through Hogwarts castle grounds
+    → Cast a spell at an NPC (particle effect fires, NPC reacts)
+    → NPC dies and loot drops
+    → Cut to: clicking a friendly NPC → QuestPanel opens
+    → Cut to: broomstick flight over the castle (most visually impressive moment)
+
+- Voiceover (no face cam yet, keep focus on screen):
+    "This is an MMO-style game built in Unity, set in the Hogwarts universe.
+     It supports both offline single-player and live multiplayer via Photon.
+     Everything you're seeing — the NPCs, the quest system, the combat,
+     the inventory — was built from scratch by me."
+
+- Freeze on a wide Hogwarts shot.
+  Cut to: your face cam (now introduce yourself briefly — 15 seconds max).
+
+WHY THIS WORKS:
+  Game dev interviewers watch dozens of portfolio videos.
+  Most start with a title screen and 2 minutes of talking.
+  Showing impressive gameplay in the first 10 seconds forces them to keep watching.
+
+=====================================================
+SECTION 2 — ARCHITECTURE OVERVIEW (0:45 – 2:30)
+"How the game is built"
+=====================================================
+
+PURPOSE: Prove you understand systems design, not just feature implementation.
+
+Show a simple diagram (hand-drawn or PowerPoint is fine — sketch aesthetic is honest):
+
+  [ Player Input ]
+       ↓
+  [ Player.cs / PlayerCombat.cs / PlayerMovement.cs ]
+       ↓                   ↓                  ↓
+  [ QuestManager ]   [ Spell System ]   [ Inventory ]
+       ↓                   ↓
+  [ iBoxDB (local) ]  [ Photon (network) ]
+       ↓
+  [ NPC System (Quester / Talker / Seller) ]
+
+Talk through each layer in 20-30 seconds:
+
+  a) Two-mode architecture:
+     "The game runs in full offline mode using iBoxDB, a local embedded database.
+      When online, Photon Unity Networking handles player synchronization.
+      The codebase doesn't need to change between modes — NetworkManager
+      detects which mode to use at startup."
+
+  b) NPC inheritance chain:
+     "All NPCs extend a base NPC class. Quester, Talker, and Seller are
+      subclasses that override OnClick(). This means adding a new NPC type
+      is a single file — the entire interaction loop is inherited."
+     → Show NPC.cs → Quester.cs on screen side by side (30 seconds of code)
+
+  c) Data layer:
+     "Game data — characters, quests, inventory, NPC positions — all persist
+      locally via iBoxDB. No server required for single player. The same
+      data model works online via Photon custom properties."
+
+  d) Localization:
+     "The game is fully localized into 5 languages: English, Spanish, German,
+      French, Dutch. Every piece of text — including all quest dialogue —
+      is stored in JSON translation files. Zero hardcoded strings in gameplay code."
+
+=====================================================
+SECTION 3 — CORE GAMEPLAY WALKTHROUGH (2:30 – 5:30)
+"The actual game, feature by feature"
+=====================================================
+
+PURPOSE: Show breadth. Each sub-section should be 20-40 seconds of footage.
+
+--- 3a. Character Creation (30 sec) ---
+  Show the Create Character screen:
+  - Type a name
+  - Select a Hogwarts house (Gryffindor / Slytherin / Ravenclaw / Hufflepuff)
+  - Click Create
+  - Character data saves to local DB (mention this explicitly)
+  Say: "House selection is stored on the character and is designed to
+        drive future class-based skill differences."
+
+--- 3b. The World — Hogwarts Castle (30 sec) ---
+  Walk around the map. Show:
+  - Scale of the environment
+  - NPC nameplates (color-coded: white = friendly, red = enemy)
+  - MiniMap tracking in the corner of the HUD
+  Say: "NPCs patrol via a waypoint system I built with a custom
+        Scene GUI editor — you set waypoints by middle-clicking
+        in the Scene view. Positions persist to the local database."
+
+--- 3c. NPC Interaction & Quest Flow (60 sec) ---
+  This is the most complete system — give it the most time.
+  Walk through the FULL quest lifecycle live:
+
+  1. Walk up to a Quester NPC
+     → QuestPanel opens, NPC dialogue appears (quest.pre text)
+     → Show "Welcome {{username}}! Your initiation is to kill a spider..."
+     → username substitution working in the text
+  2. Click Accept
+     → Sound plays, quest appears in the HUD task list
+     → Show "Kill 1 spider ✘" in the corner
+  3. Find and kill the spider
+     → Spell cast, particle effect, spider dies
+     → HUD updates to "Kill 1 spider ✔" live
+  4. Return to NPC
+     → "after" dialogue appears, Complete button shown
+  5. Click Complete
+     → Reward items added to inventory
+     → Quest reward sound plays
+
+  Say: "The quest system uses a sendAction dispatcher. Any time the player
+        kills, collects, or talks, QuestManager checks if that action matches
+        an active task. It's completely data-driven — adding a new quest
+        is just entries in a JSON file and one code block in DBSetup."
+
+--- 3d. Spell Combat System (45 sec) ---
+  Show combat:
+  - Target an enemy NPC (click to select, target panel appears)
+  - Open the skill bar
+  - Cast Fireball (hotkey 1) — show cast time bar filling in CastingPanel
+  - Projectile launches, particle collision effect on NPC
+  - Cast AoE spell — show area effect hitting multiple targets
+  - Show Frostbolt with Slow flag applied
+
+  Say: "Spells are ScriptableObjects. Each spell has configurable damage range,
+        mana cost, cast time, projectile speed, a particle prefab for both
+        the projectile and the collision effect, and a spell flag for special
+        behaviors like DamagePerSecond or Slow. New spells are added through
+        a custom SpellCreator editor window — no code changes needed."
+  → Briefly flash the SpellCreator editor window on screen.
+
+--- 3e. Inventory System (30 sec) ---
+  Open the inventory panel:
+  - Show the 5x5 grid
+  - Show items from quest reward appearing
+  - Hover over an item — tooltip appears
+  - Open Character panel — show equipped gear slots
+  - Open Sell panel — buy items from a Seller NPC
+
+  Say: "The inventory is a 5x5 grid backed by an 'inventory' table in the
+        local database. Item positions persist between sessions. The sell
+        system pulls items from the DB based on NPC and area — designed
+        for easy content expansion."
+
+--- 3f. Broomstick Flight (30 sec) ---
+  Mount the broomstick and fly:
+  - Take off from the ground
+  - Fly up over the castle
+  - Show camera-relative movement (turn in mid-air)
+
+  Say: "The broomstick uses Rigidbody physics with Lerp-smoothed velocity,
+        camera-relative input, and a Slerp rotation that always faces
+        the player away from the camera. It feels like flying, not gliding."
+
+--- 3g. Multiplayer — Online Mode (30 sec) ---
+  If you have a recording of two clients, show it. Otherwise show the lobby:
+  - Show the Photon connection flow
+  - Show a second player's nameplate appearing in the world
+  - Show the live chat system working between players
+
+  Say: "Online mode uses Photon Unity Networking with room-based matchmaking.
+        Player positions sync via PhotonView. The offline and online builds
+        share the same codebase — NetworkManager switches modes based on
+        a single inspector flag."
+
+=====================================================
+SECTION 4 — TECHNICAL DEEP DIVE (5:30 – 7:30)
+"Two things I'm most proud of technically"
+=====================================================
+
+PURPOSE: Show depth. Pick two systems and go one level deeper than the overview.
+         This is where you separate yourself from devs who just assemble assets.
+
+--- 4a. The Quest sendAction Dispatcher (60 sec) ---
+
+Show QuestManager.cs::sendAction() on screen:
+
+  "Most quest systems I've seen use boolean flags scattered everywhere.
+   I designed this as a central dispatcher — a single method that any
+   part of the game calls with a type, action, and id.
+   It decouples the quest logic completely from the game logic.
+
+   The Player doesn't know it has quests. The NPC doesn't know it's
+   a quest target. They just do their thing and notify QuestManager.
+   QuestManager decides if it matters.
+
+   This means I can add a new quest type — Visit a location, Remove an item —
+   without touching NPC or Player code at all."
+
+Show the Task.ActionType enum: Kill, Talk, GetItem, RemoveItem, Visit.
+Show sendAction being called from Player.cs and NPC.cs.
+
+--- 4b. The NPC AI & Waypoint Editor (60 sec) ---
+
+Show WaypointEditor.cs and then show it working in Unity:
+
+  "NPCs have a full patrol and aggro system. Patrol waypoints are set
+   in the scene using a custom Inspector I wrote — you select the NPC,
+   click 'Edit Waypoints', and middle-click anywhere in the scene to
+   drop a waypoint at that world position.
+
+   The waypoints save to the database, so they persist and can be
+   edited at runtime. Aggressive NPCs break out of patrol when a
+   player enters their aggro radius, chase, attack, then return to
+   their original position if the player escapes their leash range."
+
+Show the NPC state transitions briefly in NPC.cs.
+
+=====================================================
+SECTION 5 — HONEST CHALLENGES & DECISIONS (7:30 – 8:30)
+"What was hard, what I learned, what I'd do differently"
+=====================================================
+
+PURPOSE: This section is what senior developers actually care about.
+         Anyone can show features. Showing self-awareness and growth is rare.
+
+Pick 2-3 honest examples. Suggested ones based on the codebase:
+
+  a) Two-database problem:
+     "Balancing offline persistence with online state was the hardest
+      architectural challenge. iBoxDB works great locally, but online
+      players need state synced via Photon custom properties.
+      My current approach works but creates duplication.
+      If I were building this again, I'd abstract the data layer behind
+      an interface from day one — so the storage backend is swappable."
+
+  b) Quest completion detection:
+     "The quest isCompleted check is lazy — it only runs when the player
+      returns to the NPC. There's no 'quest completed' notification in the
+      middle of gameplay. I've already designed the fix: sendAction should
+      check if all tasks are done after each update and fire a global event
+      that the HUD can subscribe to."
+
+  c) Hardcoded quest data:
+     "Quest definitions are currently in a DBSetup.cs method. That works
+      for 2 quests, but it doesn't scale to 50 quests.
+      The architecture already supports data-driven quests — I just need
+      to move the definitions to a JSON or ScriptableObject format
+      and load them at startup."
+
+WHY THIS MATTERS TO INTERVIEWERS:
+  Showing you know the weaknesses of your own code, and have already
+  thought about the solutions, is stronger than claiming the code is perfect.
+
+=====================================================
+SECTION 6 — WHAT'S NEXT (8:30 – 9:30)
+"The roadmap"
+=====================================================
+
+PURPOSE: Show product thinking, not just coding thinking.
+
+Speak to 3-4 concrete next steps:
+
+  "The immediate next priorities are:
+
+   1. Class-based skill trees — house selection drives which spells unlock
+      at each level. The SkillsUI already has the level-gate logic,
+      I need to connect it to character data.
+
+   2. Quest notification system — a 'Quest Complete!' banner triggered by
+      sendAction when all tasks finish, without needing to walk back to NPC.
+
+   3. Zone-based NPC shops — Seller currently shows the first 3 items
+      from the database. The architecture already supports filtering by
+      NPC level and area, I just need to populate that data.
+
+   4. Online quest sync — quest progress is currently local only.
+      Moving task state to Photon room properties would make co-op
+      quest completion possible with minimal code changes."
+
+=====================================================
+SECTION 7 — CLOSING (9:30 – end)
+=====================================================
+
+- Return to a wide gameplay shot (Hogwarts castle at dusk if you have it)
+- Face cam for last 20 seconds
+
+Say:
+  "What I found most interesting about this project wasn't any single feature —
+   it was designing systems that talk to each other cleanly.
+   The quest system, the NPC system, and the combat system are all
+   decoupled. I can change any one of them without breaking the others.
+
+   That's the kind of architecture I want to keep building."
+
+- End on a still frame of the game, your name, GitHub link.
+
+=====================================================
+PRODUCTION TIPS
+=====================================================
+
+RECORDING:
+  - Record gameplay at 1920x1080, at least 60fps
+  - Use OBS Studio (free) — set bitrate to 8000 kbps for clean footage
+  - Record a separate clean audio track for voiceover (even your phone mic is fine)
+  - Record code sections separately as screen capture, zoomed in (font size 16+)
+  - Use a screen pointer / highlight tool when pointing at code lines
+    (e.g. PowerPoint Presentation mode, or "Cursor Highlight" OBS plugin)
+
+EDITING:
+  - DaVinci Resolve (free) is more than enough
+  - Add subtle background music at 20% volume — nothing with vocals
+  - Use jump cuts freely, do not leave silent gaps
+  - Add text labels when switching sections:
+    e.g. "Quest System — QuestManager.cs" as a lower-third title
+
+DO NOT:
+  - Do not show crashes or NullReferenceExceptions, even briefly
+  - Do not apologize for missing features — frame them as roadmap items
+  - Do not use screen transitions (wipes, spinning, etc.) — plain cuts only
+  - Do not let any section run longer than 90 seconds without a visual change
+
+DO:
+  - Show your face at least twice — it builds connection
+  - Speak at 80% of your normal speed — nervousness makes people talk fast
+  - Mention specific class names and method names when talking about code
+    — it proves you understand what you built, not just that it runs
+
+=====================================================
+TOTAL RUNTIME TARGET: 9 to 11 minutes
+SECTIONS THAT CAN BE CUT IF TIME IS TIGHT:
+  → Section 3g (Multiplayer) — cut if you don't have 2-client footage
+  → Section 4b (Waypoint Editor) — cut if short on time, mention briefly in 3b
+SECTION THAT MUST NOT BE CUT:
+  → Section 5 (Challenges & Decisions) — this is your differentiator
+=====================================================

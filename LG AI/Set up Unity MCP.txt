@@ -1,0 +1,282 @@
+=====================================================
+UNITY MCP SETUP GUIDE FOR THIS PROJECT
+=====================================================
+Project Unity version: 2022.3.62f3
+Recommended package: CoplayDev/unity-mcp (supports Unity 2019+)
+  → GitHub: https://github.com/CoplayDev/unity-mcp
+
+Why NOT CoderGamester/mcp-unity?
+  → That package requires Unity 6 or later.
+  → This project is on Unity 2022.3, so it will NOT work.
+
+What MCP gives you:
+  → GitHub Copilot (or Claude, Cursor, etc.) can directly:
+     - Create/move/delete GameObjects in your scene
+     - Add/configure components via Inspector values
+     - Create and assign prefabs
+     - Read Unity console errors
+     - Run Play mode
+     - Modify scripts
+  → You just type a prompt like:
+     "Add a Quester NPC at position (10, 0, 5) and set its Id to 3"
+     and Copilot does it inside Unity for you.
+
+=====================================================
+PREREQUISITES — Install These First
+=====================================================
+
+--- Python 3.10 or later ---
+
+1. Open your browser and go to:
+   https://www.python.org/downloads/
+
+2. Click "Download Python 3.x.x" (the big yellow button).
+
+3. Run the installer.
+   IMPORTANT: On the first screen, CHECK the box that says:
+   "Add python.exe to PATH"
+   Then click "Install Now".
+
+4. After install, verify it worked:
+   - Open PowerShell (press Win + X → Terminal)
+   - Type: python --version
+   - You should see something like: Python 3.12.0
+   - If you see an error, restart your PC and try again.
+
+--- Git ---
+
+5. Check if Git is already installed:
+   - In PowerShell, type: git --version
+   - If you see "git version 2.x.x", you already have it. Skip to Step 9.
+
+6. If not installed, go to: https://git-scm.com/download/win
+   Download and run the installer with all default options.
+
+7. Verify:
+   - In PowerShell, type: git --version
+   - Should show: git version 2.x.x
+
+=====================================================
+PART 1 — INSTALL THE MCP PACKAGE INTO UNITY
+=====================================================
+
+Step 8. Open your project in Unity Hub.
+  - Open Unity Hub
+  - Click on the Hogwarts project to open it
+  - Wait for Unity to fully load (may take a minute or two)
+
+Step 9. Open the Package Manager.
+  - In the Unity top menu bar, click: Window
+  - Click: Package Manager
+  - A new window will appear
+
+Step 10. Add the MCP package from Git URL.
+  - In the Package Manager window, click the "+" button
+    in the TOP-LEFT corner of that window
+  - A dropdown appears. Click: "Add package from git URL..."
+  - An input box appears at the top
+
+Step 11. Paste this exact URL into the input box:
+  https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main
+
+  Then press Enter or click the "Add" button.
+
+Step 12. Wait for Unity to download and install the package.
+  - You will see a loading spinner in the bottom-right of the Unity window
+  - This may take 1-3 minutes depending on your internet speed
+  - When done, "MCP for Unity" will appear in the Package Manager list
+    under "In Project"
+
+Step 13. Verify the install worked.
+  - In the Unity top menu bar, click: Window
+  - You should now see "MCP for Unity" in the Window menu
+  - If you see it, the package installed correctly
+
+=====================================================
+PART 2 — CONFIGURE MCP TO CONNECT TO VS CODE COPILOT
+=====================================================
+
+Step 14. Open the MCP for Unity configuration window.
+  - In Unity top menu bar, click: Window
+  - Click: MCP for Unity
+  - A window will open showing detected AI clients
+
+Step 15. Configure for VS Code / GitHub Copilot.
+  - In the MCP for Unity window, look for "VS Code" or "GitHub Copilot"
+    in the list of detected clients
+  - Click the button: "Configure All Detected Clients"
+    (or click "Configure" next to VS Code specifically)
+
+  What this does behind the scenes:
+  → It writes a config file to your VS Code user settings folder.
+  → The file is called: mcp.json (or updates .vscode/mcp.json)
+  → This tells VS Code Copilot "there is an MCP server available"
+
+Step 16. Check what was written (optional, to verify).
+  - The config file will be at one of these locations:
+    Global:  C:\Users\YourUsername\AppData\Roaming\Code\User\mcp.json
+    Project: D:\Self\Code_allan\Hogwarts\.mcp.json
+  - It should look something like this:
+    {
+      "servers": {
+        "mcp-unity": {
+          "type": "stdio",
+          "command": "python",
+          "args": ["-m", "mcp_unity"],
+          ...
+        }
+      }
+    }
+
+Step 17. Enable MCP in VS Code settings.
+  - Open VS Code (you can do this while Unity is open — they run independently)
+  - Press Ctrl + Shift + P to open the Command Palette
+  - Type: "Open User Settings (JSON)"
+  - Press Enter
+  - In the settings JSON file, make sure this line exists:
+    "chat.mcp.enabled": true
+  - If it's not there, add it inside the curly braces:
+    {
+      "chat.mcp.enabled": true,
+      ... (other settings)
+    }
+  - Save the file (Ctrl + S)
+
+Step 18. Restart VS Code.
+  - Close VS Code completely
+  - Reopen it
+  - This ensures the MCP config is loaded fresh
+
+=====================================================
+PART 3 — START THE MCP SERVER IN UNITY
+=====================================================
+
+Step 19. Make sure Unity is open with your project loaded.
+  (Unity must be open and running any time you want to use MCP)
+
+Step 20. Start the MCP server inside Unity.
+  - In Unity top menu bar, click: Window
+  - Click: MCP for Unity
+  - In the MCP window, click: "Start Server"
+    (or it may start automatically when Unity opens — check the status)
+
+Step 21. Confirm it is running.
+  - The MCP window should show a green status indicator
+  - Or it will say "Server running" / "Connected"
+
+=====================================================
+PART 4 — USE IT IN VS CODE COPILOT
+=====================================================
+
+Step 22. Open VS Code with your Hogwarts project folder.
+  - File → Open Folder → D:\Self\Code_allan\Hogwarts
+
+Step 23. Open the Copilot Chat panel.
+  - Press Ctrl + Alt + I
+  - Or click the Copilot icon in the left sidebar
+  - Or press Ctrl + Shift + P → "GitHub Copilot: Open Chat"
+
+Step 24. Switch to Agent mode.
+  - At the bottom of the Copilot Chat input box, there is a mode selector
+  - Change it from "Ask" to "Agent" (this enables tool use including MCP)
+
+Step 25. Verify MCP tools are available.
+  - In the chat input area, click the tools icon (looks like a plug or wrench)
+  - You should see "mcp-unity" tools listed, such as:
+    - get_scene_info
+    - update_gameobject
+    - add_asset_to_scene
+    - get_console_logs
+    - etc.
+  - If you see these, everything is connected correctly.
+
+Step 26. Try your first MCP prompt.
+  Examples you can type into Copilot Chat (Agent mode):
+
+  "Show me the current scene hierarchy"
+
+  "Create an empty GameObject called TestNPC at position (0, 0, 0)
+   and add the Quester component with Id set to 3"
+
+  "Show me the last 10 Unity console errors"
+
+  "What GameObjects are in the MainMenu scene?"
+
+=====================================================
+TROUBLESHOOTING
+=====================================================
+
+PROBLEM: Unity Package Manager shows an error when adding the git URL
+FIX:
+  - Make sure Git is installed (run: git --version in PowerShell)
+  - Make sure you have an internet connection
+  - Try copying the URL again exactly:
+    https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main
+
+PROBLEM: "MCP for Unity" does not appear in the Window menu after install
+FIX:
+  - In Unity, click: Assets → Reimport All
+  - Wait for Unity to recompile
+  - Check Window menu again
+
+PROBLEM: VS Code does not show MCP tools in Agent mode
+FIX:
+  - Make sure "chat.mcp.enabled": true is in VS Code User Settings JSON
+  - Make sure you restarted VS Code after adding the setting
+  - Make sure the Unity MCP server is RUNNING (green status in Unity)
+  - Make sure you are in "Agent" mode, not "Ask" mode in Copilot Chat
+  - Press Ctrl + Shift + P → "MCP: List Servers" to see if mcp-unity appears
+
+PROBLEM: Copilot can see the tools but says "connection failed"
+FIX:
+  - Unity must be open and the project must be loaded
+  - In Unity: Window → MCP for Unity → click "Start Server"
+  - Check if a firewall or antivirus is blocking the connection
+  - Try restarting both Unity and VS Code
+
+PROBLEM: Python not found / "python is not recognized"
+FIX:
+  - Reinstall Python from https://www.python.org/downloads/
+  - On the installer's first screen, check "Add python.exe to PATH"
+  - Restart your PC after installing
+  - Try: py --version  (Windows also has a "py" launcher)
+
+=====================================================
+QUICK REFERENCE — DAILY WORKFLOW
+=====================================================
+
+Every time you want to use AI to control Unity:
+
+1. Open Unity → load your Hogwarts project
+2. Window → MCP for Unity → Start Server (if not auto-started)
+3. Open VS Code
+4. Open Copilot Chat (Ctrl + Alt + I)
+5. Switch to "Agent" mode
+6. Type your prompt
+
+Unity must stay open while you use the MCP tools.
+You do NOT need to switch to Unity — changes happen live.
+
+=====================================================
+WHAT MCP CAN DO FOR THIS PROJECT SPECIFICALLY
+=====================================================
+
+Once set up, you can ask Copilot things like:
+
+  "Open the MainMenu scene and show me the Canvas hierarchy"
+
+  "Find the QuestPanel GameObject and tell me all its components
+   and serialized field values"
+
+  "Add a new child Text object called 'QuestDescription'
+   to the QuestPanel and set its font size to 14"
+
+  "Place a new Quester NPC prefab in the Hogwarts scene
+   at position (23, 0, 15) and set Id = 5"
+
+  "Run the game in Play mode and show me the console output"
+
+  "Check if there are any missing component references
+   in the PlayerPanel GameObject"
+
+=====================================================

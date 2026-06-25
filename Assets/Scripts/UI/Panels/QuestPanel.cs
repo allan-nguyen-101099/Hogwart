@@ -16,13 +16,20 @@ public class QuestPanel : MonoBehaviour
         quest = questData;
         title.text = quest.name;
 
-        if (quest.isCompleted) {
+        bool isActiveQuest = QuestManager.Instance.quests.ContainsKey(quest.id);
+
+        if (quest.isCompleted && isActiveQuest) {
+            // Quest tasks all done, player is turning it in
             text.text = processText(quest.after);
             acceptButton.SetActive(false);
             completeButton.SetActive(true);
-        } else if (QuestManager.Instance.quests.ContainsKey(quest.id)) { // quest accepted, but not finished
+        } else if (isActiveQuest) {
+            // Quest accepted, but tasks not yet finished
             text.text = LanguageManager.get("QUEST_NOT_FINISHED");
+            acceptButton.SetActive(false);
+            completeButton.SetActive(false);
         } else {
+            // Quest not yet accepted — show NPC dialogue and accept button
             text.text = processText(quest.pre);
             acceptButton.SetActive(true);
             completeButton.SetActive(false);
