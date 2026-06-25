@@ -29,38 +29,64 @@ public class PlayerCombat : MonoBehaviour {
 	// for numeric hotkeys
 	public void spellCast(int key)
 	{
+		Debug.LogWarning($"[PlayerCombat.spellCast] Called with key index: {key}");
+		
 		if (Player.Instance.target == null) {
+			Debug.LogError("[PlayerCombat.spellCast] NO TARGET! Returning without casting.");
 			return;
 		}
+		
+		if (key < 0 || key >= spellList.Count) {
+			Debug.LogError($"[PlayerCombat.spellCast] Invalid spell index: {key}, spellList count: {spellList.Count}");
+			return;
+		}
+		
+		Spell spell = spellList[key];
+		Debug.LogWarning($"[PlayerCombat.spellCast] Spell: {spell.spellName}, Mana Cost: {spell.spellManaCost}, Min Level: {spell.minLevel}");
+		Debug.LogWarning($"[PlayerCombat.spellCast] Player Mana: {Player.Instance.mana}/{Player.Instance.maxMana}, Player Level: {Player.Instance.level}");
+		
 		StartCoroutine(SpellCast(spellList[key], key));
 	}
 
 	public IEnumerator SpellCast(Spell spell, int uiPos)
 	{
-        if (spell.spellManaCost > Player.Instance.mana || spell.minLevel > Player.Instance.level) {
+        Debug.LogWarning($"[PlayerCombat.SpellCast] Started casting {spell.spellName}");
+        
+        if (spell.spellManaCost > Player.Instance.mana) {
+            Debug.LogError($"[PlayerCombat.SpellCast] NOT ENOUGH MANA! Need: {spell.spellManaCost}, Have: {Player.Instance.mana}");
+            yield break;
+        }
+        
+        if (spell.minLevel > Player.Instance.level) {
+            Debug.LogError($"[PlayerCombat.SpellCast] LEVEL TOO LOW! Need: {spell.minLevel}, Have: {Player.Instance.level}");
             yield break;
         }
 
 		SkillsUI.Instance.disableSkill(uiPos);
 		castingSpell = true;
 		Player.Instance.mana -= spell.spellManaCost;
+        Debug.LogWarning($"[PlayerCombat.SpellCast] Mana deducted. New mana: {Player.Instance.mana}");
 
 		// Wait for choosen spell cast time.
 		Player.Instance.anim.SetBool("InvokeSpell", true);
+        Debug.LogWarning($"[PlayerCombat.SpellCast] Anim InvokeSpell set to true, cast time: {spell.spellCastTime}");
         PlayerPanel.Instance.castingPanel.Cast(spell.spellName, spell.spellCastTime);
 		yield return new WaitForSeconds(spell.spellCastTime-spellAnimTime);
 
 		Player.Instance.anim.SetInteger("SpellType", 1);
 		Player.Instance.anim.SetBool("InvokeSpell", false);
+        Debug.LogWarning($"[PlayerCombat.SpellCast] Animation parameters updated");
 
 		yield return new WaitForSeconds(spellAnimTime);
 
 		// Set up a spell and cast it.
 		SpellSetUp(spell);
+        Debug.LogWarning($"[PlayerCombat.SpellCast] SpellSetUp called for {spell.spellName}");
 
 		SkillsUI.Instance.enableSkill(uiPos);
 		
 		castingSpell = false;
+        Debug.LogWarning($"[PlayerCombat.SpellCast] SPELL CAST COMPLETE!");
 	}
 
 	void SpellSetUp(Spell spell)

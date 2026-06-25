@@ -54,7 +54,7 @@ public class NetworkManager : Photon.MonoBehaviour
             var mainCamera = __player.transform.Find("Main Camera");
             if (mainCamera != null)
             {
-                Debug.LogWarning($"[NetworkManager] Main Camera found at position: {mainCamera.position}");
+                Debug.Log($"[NetworkManager] Main Camera found at position: {mainCamera.position}");
             }
             else
             {
@@ -174,7 +174,7 @@ public class NetworkManager : Photon.MonoBehaviour
         if (mainCamera != null)
         {
             
-            Debug.LogWarning($"Main Camera found at position: {mainCamera.position}");
+            Debug.Log($"Main Camera found at position: {mainCamera.position}");
             
             var cameraComponent = mainCamera.GetComponent<Camera>();
             CameraChecker.SetCamera(cameraComponent);

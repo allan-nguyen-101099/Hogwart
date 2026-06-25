@@ -15,6 +15,7 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 		[SerializeField] float m_MoveSpeedMultiplier = 1f;
 		[SerializeField] float m_AnimSpeedMultiplier = 1f;
 		[SerializeField] float m_GroundCheckDistance = 0.1f;
+		[SerializeField] float m_BaseMovementSpeed = 5.66f; // Adjustable walk speed in m/s
 
 		Rigidbody m_Rigidbody;
 		Animator m_Animator;
@@ -28,6 +29,8 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 		Vector3 m_CapsuleCenter;
 		CapsuleCollider m_Capsule;
 		bool m_Crouching;
+		float m_CameraRotationY;
+		Vector3 m_InputDirection; // Store input direction for strafing
 
 
 		void Start()
@@ -40,21 +43,26 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 
 			m_Rigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
 			m_OrigGroundCheckDistance = m_GroundCheckDistance;
+			m_CameraRotationY = transform.eulerAngles.y;
 		}
 
-
-		public void Move(Vector3 move, bool crouch, bool jump)
+		public void Move(Vector3 move, bool crouch, bool jump, float cameraRotationY = 0)
 		{
-
-			// convert the world relative moveInput vector into a local-relative
-			// turn amount and forward amount required to head in the desired
-			// direction.
-			if (move.magnitude > 1f) move.Normalize();
+			m_CameraRotationY = cameraRotationY;
+		
+			// Store world movement direction for strafing in OnAnimatorMove
+			m_InputDirection = move;
+			
+			// Movement is already camera-relative from ThirdPersonUserControl
+			// Convert to character-local space for animation
 			move = transform.InverseTransformDirection(move);
+			
 			CheckGroundStatus();
 			move = Vector3.ProjectOnPlane(move, m_GroundNormal);
 			m_TurnAmount = Mathf.Atan2(move.x, move.z);
-			m_ForwardAmount = move.z;
+			// Use movement magnitude for forward amount to support strafing (A/D keys)
+			m_ForwardAmount = new Vector3(move.x, 0, move.z).magnitude;
+			if (move.z < 0) m_ForwardAmount *= -1; // Keep backward direction negative
 
 			ApplyExtraTurnRotation();
 
@@ -178,9 +186,15 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 
 		void ApplyExtraTurnRotation()
 		{
-			// help the character turn faster (this is in addition to root rotation in the animation)
-			float turnSpeed = Mathf.Lerp(m_StationaryTurnSpeed, m_MovingTurnSpeed, m_ForwardAmount);
-			transform.Rotate(0, m_TurnAmount * turnSpeed * Time.deltaTime, 0);
+			// Make character face camera direction (CS:GO/Valorant style)
+			float currentRotation = transform.eulerAngles.y;
+			float rotationDifference = Mathf.DeltaAngle(currentRotation, m_CameraRotationY);
+			
+			// Smoothly rotate character to face camera
+			float turnSpeed = 15f;
+			float rotationThisFrame = rotationDifference * Time.deltaTime * turnSpeed;
+			
+			transform.Rotate(0, rotationThisFrame, 0);
 		}
 
 
@@ -190,7 +204,19 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 			// this allows us to modify the positional speed before it's applied.
 			if (m_IsGrounded && Time.deltaTime > 0)
 			{
-				Vector3 v = (m_Animator.deltaPosition * m_MoveSpeedMultiplier) / Time.deltaTime;
+				Vector3 v = Vector3.zero;
+				
+				if (m_InputDirection.magnitude > 0)
+				{
+					// Use a consistent base speed for all directions
+					// This ensures backward movement works and all directions move at same speed
+					v = m_InputDirection.normalized * m_BaseMovementSpeed;
+				}
+				else
+				{
+					// No input, apply animator movement
+					v = (m_Animator.deltaPosition * m_MoveSpeedMultiplier) / Time.deltaTime;
+				}
 
 				// we preserve the existing y part of the current velocity.
 				v.y = m_Rigidbody.velocity.y;

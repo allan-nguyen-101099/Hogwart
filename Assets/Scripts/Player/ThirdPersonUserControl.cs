@@ -26,7 +26,10 @@ namespace UnityStandardAssets.Characters.ThirdPerson
             // we use self-relative controls in this case, which probably isn't what the user wants, but hey, we warned them!
             // get the third person character ( this should never be null due to require component )
             m_Character = GetComponent<ThirdPersonCharacter>();
-            m_CamForward = Vector3.Scale(transform.forward, new Vector3(1, 0, 1)).normalized;
+            if (m_Cam != null)
+                m_CamForward = Vector3.Scale(m_Cam.forward, new Vector3(1, 0, 1)).normalized;
+            else
+                m_CamForward = Vector3.Scale(transform.forward, new Vector3(1, 0, 1)).normalized;
         }
 
 
@@ -34,25 +37,33 @@ namespace UnityStandardAssets.Characters.ThirdPerson
         {
             if (Chat.Instance.isWritting) return;
 
-            if (!m_Jump) m_Jump = InputSystemAgent.GetKeyDown("Space");
+            // Try InputSystemAgent first, fall back to old Input system
+            if (!m_Jump)
+                m_Jump = InputSystemAgent.GetKeyDown("Space") || Input.GetKeyDown(KeyCode.Space);
         }
 
 
         // Fixed update is called in sync with physics
         private void FixedUpdate()
         {
-            if (Chat.Instance.isWritting) return;
-            var mov=InputSystemAgent.NormalMove;
-            var crouch = InputSystemAgent.GetKey("LCtrl");
-            var h = mov.x;
-            var v = mov.y;
+            if (Chat.Instance.isWritting)
+            {
+                return;
+            }
+            
+            // Use old Input system for reliable WASD input
+            float h = Input.GetAxis("Horizontal");  // A/D
+            float v = Input.GetAxis("Vertical");    // W/S
+            
+            var crouch = InputSystemAgent.GetKey("LCtrl") || Input.GetKey(KeyCode.LeftControl);
+            
             // calculate move direction to pass to character
             if (m_Cam != null)
             {
                 // calculate camera relative direction to move:
-                if (h != 0) m_CamForward = Vector3.Scale(transform.forward, new Vector3(1, 0, 1)).normalized;
+                m_CamForward = Vector3.Scale(m_Cam.forward, new Vector3(1, 0, 1)).normalized;
 
-                m_Move = v * m_CamForward + h * transform.right;
+                m_Move = v * m_CamForward + h * m_Cam.right;
             }
             else
             {
@@ -60,10 +71,12 @@ namespace UnityStandardAssets.Characters.ThirdPerson
                 m_Move = v * Vector3.forward + h * Vector3.right;
             }
             // walk speed multiplier
-            if (InputSystemAgent.GetKey("LShift")) m_Move *= 0.5f;
+            if (InputSystemAgent.GetKey("LShift") || Input.GetKey(KeyCode.LeftShift)) 
+                m_Move *= 0.5f;
 
             // pass all parameters to the character control script
-            m_Character.Move(m_Move, crouch, m_Jump);
+            // Also pass camera direction for CS:GO/Valorant style movement
+            m_Character.Move(m_Move, crouch, m_Jump, m_Cam != null ? m_Cam.eulerAngles.y : 0);
             m_Jump = false;
         }
     }

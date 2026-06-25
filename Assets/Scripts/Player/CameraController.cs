@@ -55,16 +55,6 @@ public class CameraController : MonoBehaviour
             
             x += mouseX;
             y -= mouseY;
-
-            float moveX = Input.GetAxis("Horizontal");
-            float moveY = Input.GetAxis("Vertical");
-            
-            if (moveX != 0 || moveY != 0)
-            {
-                var targetRotationAngle = cameraTarget.eulerAngles.y;
-                var cameraRotationAngle = transform.eulerAngles.y;
-                x = Mathf.LerpAngle(cameraRotationAngle, targetRotationAngle, lerpRate * Time.deltaTime);
-            }
         }
 
         y = ClampAngle(y, -50, 80);

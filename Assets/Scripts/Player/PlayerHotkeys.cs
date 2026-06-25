@@ -56,10 +56,27 @@ public class PlayerHotkeys : MonoBehaviour
             }
 
             if (InputSystemAgent.GetKeyDown("1"))
+            {
+                Debug.LogWarning("[PlayerHotkeys] KEY 1 PRESSED - Calling spellCast(0)");
                 PlayerCombat.Instance.spellCast(0);
+            }
             else if (InputSystemAgent.GetKeyDown("2"))
+            {
+                Debug.LogWarning("[PlayerHotkeys] KEY 2 PRESSED - Calling spellCast(1)");
                 PlayerCombat.Instance.spellCast(1);
-            else if (InputSystemAgent.GetKeyDown("3")) PlayerCombat.Instance.spellCast(2);
+            }
+            else if (InputSystemAgent.GetKeyDown("3"))
+            {
+                Debug.LogWarning("[PlayerHotkeys] KEY 3 PRESSED - Calling spellCast(2)");
+                PlayerCombat.Instance.spellCast(2);
+            }
+        }
+        else
+        {
+            if (InputSystemAgent.GetKeyDown("1") || InputSystemAgent.GetKeyDown("2") || InputSystemAgent.GetKeyDown("3"))
+            {
+                Debug.LogWarning("[PlayerHotkeys] Hotkey pressed but NO TARGET! Cannot cast spell.");
+            }
         }
     }
 
