@@ -19,21 +19,19 @@ public class SkillsUI : MonoBehaviour
 
     public void displayUnlockedSkills()
     {
-        int playerLevel = Player.Instance.level;
-        playerLevel = 2;
+        CharacterData data = Player.Instance.characterData;
 
-        if (playerLevel >= 2)
-        {
-            Skills[2].transform.parent.gameObject.SetActive(true);
-        }
-        if (playerLevel >= 4)
-        {
-            Skills[3].transform.parent.gameObject.SetActive(true);
-        }
-        if (playerLevel >= 6)
-        {
-            Skills[4].transform.parent.gameObject.SetActive(true);
-        }
+        // Hide the image of Skill2 (index 1) if not yet unlocked
+        // Skill1 (index 0) is always visible
+        GameObject skill2 = Skills[1].gameObject;
+        skill2.GetComponent<Image>().enabled = data.isSpellUnlocked(1);
+    }
+
+    public void unlockSpell(int spellIndex)
+    {
+        Player.Instance.characterData.unlockSpell(spellIndex);
+        Player.Instance.characterData.save();
+        Skills[spellIndex].gameObject.GetComponent<Image>().enabled = true;
     }
 
     public void fillSlots()

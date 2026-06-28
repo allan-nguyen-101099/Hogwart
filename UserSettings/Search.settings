@@ -1,5 +1,6 @@
 trackSelection = true
 refreshSearchWindowsInPlayMode = false
+pickerAdvancedUI = false
 fetchPreview = true
 defaultFlags = 0
 keepOpen = false
@@ -8,6 +9,9 @@ onBoardingDoNotAskAgain = true
 showPackageIndexes = false
 showStatusBar = false
 scopes = {
+	"last_search.66F56946" = "Recibir recompensa"
+	"OpenInspectorPreview.66F56946" = "0"
+	"currentGroup.66F56946" = "asset"
 }
 providers = {
 	packages = {
@@ -59,6 +63,15 @@ providers = {
 objectSelectors = {
 }
 recentSearches = [
+	"Recibir recompensa"
+	"c"
+	"recibir\\"
+	"recibir recompensa"
+	"re"
+	""
+	"m"
+	"mi"
+	"t:s"
 ]
 searchItemFavorites = [
 ]

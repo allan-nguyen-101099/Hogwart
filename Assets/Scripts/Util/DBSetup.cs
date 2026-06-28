@@ -268,7 +268,6 @@ public class DBSetup : MonoBehaviour {
 		npc.create ();
 
         waypoints = new List<Vector3>();
-        waypoints.Add(new Vector3(7.56f, 0.00f, -0.81f));
         waypoints.Add(new Vector3(1.08f, 0.00f, -5.30f));
         waypoints.Add(new Vector3(-8.74f, 0.00f, 0.02f));
         waypoints.Add(new Vector3(0.35f, 0.00f, 3.60f));
@@ -383,6 +382,7 @@ public class DBSetup : MonoBehaviour {
         quest.assigner = 3; // NPC who assigned it
         QuestManager.Instance.assignToNPC(quest);
         quest.loot.Add(3, 4); // id, quantity
+        quest.spellRewards.Add(1); // unlock Skill2 (Frost Ball) as reward
 
         task = new Task();
         task.quest = quest.id;
@@ -395,15 +395,15 @@ public class DBSetup : MonoBehaviour {
 
         quest.tasks.Add(task.taskId, task);
 
-        task = new Task();
-        task.quest = quest.id;
-        task.taskId = taskId++;
-        task.id = 1;
-        task.idType = Task.IdType.Id;
-        task.type = Task.ActorType.NPC;
-        task.action = Task.ActionType.Talk;
+        // task = new Task();
+        // task.quest = quest.id;
+        // task.taskId = taskId++;
+        // task.id = 1;
+        // task.idType = Task.IdType.Id;
+        // task.type = Task.ActorType.NPC;
+        // task.action = Task.ActionType.Talk;
 
-        quest.tasks.Add(task.taskId, task);
+        // quest.tasks.Add(task.taskId, task);
 
         QuestManager.Instance.allQuests.Add(quest.id, quest);
         // -- end quest

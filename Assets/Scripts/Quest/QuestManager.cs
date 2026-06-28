@@ -60,6 +60,11 @@ public class QuestManager : MonoBehaviour
             Player.Instance.addItem(entry.Key, entry.Value);
         }
 
+        // unlock spells as quest reward
+        foreach (int spellIndex in quest.spellRewards) {
+            SkillsUI.Instance.unlockSpell(spellIndex);
+        }
+
         quests.Remove(quest.id);
         Destroy(quest.ui.gameObject);
     }

@@ -47,7 +47,11 @@ public class NetworkManager : Photon.MonoBehaviour
 
             if (__player == null)
             {
-                Debug.LogWarning("[NetworkManager] __player is null! It was destroyed or cleared.");
+                // Only warn if we're actually in the game scene, not on main menu
+                if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == Menu.defaultLevel)
+                {
+                    Debug.LogWarning("[NetworkManager] __player is null! It was destroyed or cleared.");
+                }
                 return;
             }
 

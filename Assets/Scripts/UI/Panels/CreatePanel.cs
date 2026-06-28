@@ -83,8 +83,12 @@ public class CreatePanel : MonoBehaviour {
 			return;
 		}
 
-		// Go back to MainPanel which will now show the Join button for the new character
-		Menu.Instance.showPanel("MainPanel");
+		// Auto-start the game immediately after character creation
+		Hashtable h = new Hashtable(1);
+		h.Add("characterId", character.id);
+		PhotonNetwork.player.SetCustomProperties(h);
+		PhotonNetwork.player.NickName = character.name;
+		NetworkManager.Instance.startConnection();
 	}
 
 	private void showError(string message) {

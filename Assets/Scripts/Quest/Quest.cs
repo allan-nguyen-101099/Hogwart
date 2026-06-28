@@ -43,4 +43,6 @@ public class Quest
         }
     }
     public Dictionary<int, int> loot = new Dictionary<int, int>();
+    // Spell slot indices (0-based) to unlock when this quest is completed
+    public List<int> spellRewards = new List<int>();
 }

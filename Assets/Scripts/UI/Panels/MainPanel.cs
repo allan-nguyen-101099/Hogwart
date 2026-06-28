@@ -8,6 +8,7 @@ public class MainPanel : MonoBehaviour {
     public Text nickLabel;
 	public Text LevelLabel;
 	public Button JoinButton;
+	public Button NewGameButton;
 
 	private int playerId;
 
@@ -38,6 +39,19 @@ public class MainPanel : MonoBehaviour {
 			nickLabel.transform.gameObject.SetActive(true);
 			LevelLabel.transform.gameObject.SetActive(true);
 			JoinButton.transform.gameObject.SetActive(true);
+			
+			// Setup New Game button
+			if (NewGameButton == null)
+			{
+				NewGameButton = GameObject.Find("Canvas/MainPanel/LoginOptions/NewGameButton")?.GetComponent<Button>();
+			}
+			// if (NewGameButton != null)
+			// {
+				NewGameButton.onClick.RemoveAllListeners();
+				NewGameButton.onClick.AddListener(showNewGameConfirm);
+				NewGameButton.gameObject.SetActive(true);
+			// }
+			
 			#if UNITY_EDITOR
 			GameObject.Find ("Canvas/MainPanel/LoginOptions/TestButton").SetActive(true);
 			#endif
@@ -47,6 +61,7 @@ public class MainPanel : MonoBehaviour {
 			nickLabel.transform.gameObject.SetActive(false);
 			LevelLabel.transform.gameObject.SetActive(false);
 			JoinButton.transform.gameObject.SetActive(false);
+			if (NewGameButton != null) NewGameButton.gameObject.SetActive(false);
 			GameObject.Find ("Canvas/MainPanel/LoginOptions/TestButton").SetActive(false);
 		}
 		 
@@ -71,5 +86,78 @@ public class MainPanel : MonoBehaviour {
 	public void joinTest () {
 		Menu.defaultLevel = Menu.debugLevel;
 		joinGame (playerId, "Tester");
+	}
+
+	public void showNewGameConfirm()
+	{
+		// Show confirmation dialog
+		if (ConfirmationPanel.Instance != null)
+		{
+			ConfirmationPanel.Instance.Show(
+				"Start New Game?\n\nThis will delete your current character and all progress.",
+				() => clearDatabase(),
+				() => { } // On cancel, do nothing
+			);
+		}
+		else
+		{
+			Debug.LogError("[MainPanel] ConfirmationPanel not found!");
+		}
+	}
+
+	private void clearDatabase()
+	{
+		try
+		{
+			Debug.LogWarning("[MainPanel] Clearing all game data...");
+			
+			// Delete character by its actual key (id = 1)
+			try
+			{
+				Service.db.Delete("characters", 1);
+				Debug.LogWarning("[MainPanel] Cleared table: characters");
+			}
+			catch (System.Exception ex)
+			{
+				Debug.LogWarning($"[MainPanel] Could not clear table 'characters': {ex.Message}");
+			}
+
+			// Delete all tasks by their actual taskId keys
+			try
+			{
+				foreach (Task task in Service.db.Select<Task>("FROM tasks"))
+				{
+					Service.db.Delete("tasks", task.taskId);
+				}
+				Debug.LogWarning("[MainPanel] Cleared table: tasks");
+			}
+			catch (System.Exception ex)
+			{
+				Debug.LogWarning($"[MainPanel] Could not clear table 'tasks': {ex.Message}");
+			}
+
+			// Delete all inventory items by their actual item keys
+			try
+			{
+				foreach (CharacterItem item in Service.db.Select<CharacterItem>("FROM inventory"))
+				{
+					Service.db.Delete("inventory", item.item);
+				}
+				Debug.LogWarning("[MainPanel] Cleared table: inventory");
+			}
+			catch (System.Exception ex)
+			{
+				Debug.LogWarning($"[MainPanel] Could not clear table 'inventory': {ex.Message}");
+			}
+			
+			Debug.LogWarning("[MainPanel] Database cleared successfully!");
+			
+			// Navigate directly to character creation screen
+			Menu.Instance.showPanel("CreatePanel");
+		}
+		catch (System.Exception ex)
+		{
+			Debug.LogError($"[MainPanel] Unexpected error clearing database: {ex.Message}\n{ex.StackTrace}");
+		}
 	}
 }
