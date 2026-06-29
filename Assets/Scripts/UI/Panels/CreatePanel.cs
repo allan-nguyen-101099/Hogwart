@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.SceneManagement;
+using System.Linq;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 public class CreatePanel : MonoBehaviour {
@@ -9,6 +10,7 @@ public class CreatePanel : MonoBehaviour {
 	public InputField nameInput;
 	public Dropdown houseDropdown;
 	public Text errorText;
+	public Button createCharacterButton;
 
 	void OnEnable() {
 		// Auto-find UI elements if not assigned
@@ -29,6 +31,16 @@ public class CreatePanel : MonoBehaviour {
 			if (errorText == null) {
 				errorText = GameObject.Find("Canvas/CreatePanel/ErrorText")?.GetComponent<Text>();
 			}
+		}
+		if (createCharacterButton == null) {
+			createCharacterButton = GetComponentInChildren<Button>();
+			if (createCharacterButton == null) {
+				createCharacterButton = GameObject.Find("Canvas/CreatePanel/CreateButton")?.GetComponent<Button>();
+			}
+		}
+
+		if (createCharacterButton != null) {
+			createCharacterButton.interactable = true;
 		}
 	}
 
@@ -76,12 +88,34 @@ public class CreatePanel : MonoBehaviour {
 		character.money = 100;
 		character.position = "(633.51, 161.38, 415.70)";
 
+		// This game supports one local character profile; replace stale rows to avoid insert conflicts.
+		foreach (CharacterData existing in Service.db.Select<CharacterData>("FROM characters").ToList()) {
+			Service.db.Delete("characters", existing.id);
+		}
+
 		bool success = character.create();
 
 		if (!success) {
-			showError("Failed to create character. Try a different name.");
+			// Fallback: if id 1 still exists due a stale DB state, update it.
+			CharacterData existingById = Service.db.SelectKey<CharacterData>("characters", character.id);
+			if (existingById != null) {
+				character.save();
+				success = true;
+			}
+		}
+
+		if (!success) {
+			showError("Failed to create character. Please clear existing save data and try again.");
+			if (createCharacterButton != null) {
+				createCharacterButton.interactable = true;
+			}
 			return;
 		}
+
+		if (createCharacterButton != null) {
+			createCharacterButton.interactable = false;
+		}
+		showError("Connecting...");
 
 		// Auto-start the game immediately after character creation
 		Hashtable h = new Hashtable(1);

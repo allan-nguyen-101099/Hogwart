@@ -1,8 +1,8 @@
 Curren progress:
     - DB Syntax (done)
     - List all callback function (keyboard, mouse, sendAction) (done)
-    - The NPC AI & Waypoint Editor (reading)
-    - Online mode (partial done)
+    - The NPC AI & Waypoint Editor (done)
+    - Online mode (need testing)
     - Change Logo banner
     Todo:
     - Learn about Animator

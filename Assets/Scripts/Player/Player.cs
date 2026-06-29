@@ -353,7 +353,14 @@ public class Player : Photon.MonoBehaviour {
         catch (System.Exception ex)
         {
             Debug.LogError($"[Player.Start()] FATAL EXCEPTION: {ex.Message}\n{ex.StackTrace}");
-            Destroy(gameObject);
+            if (PhotonNetwork.offlineMode)
+            {
+                Debug.LogError("[Player.Start()] Offline mode detected, skipping Destroy(gameObject).");
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
         }
     }
 

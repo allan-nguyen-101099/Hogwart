@@ -16,6 +16,9 @@ public class NetworkManager : Photon.MonoBehaviour
     bool useOffline;
     GameObject __player;
     private float timer = 0f;
+    private bool _connectionRequested = false;
+    private bool _lobbyFlowStarted = false;
+    private bool _pendingSpawn = false;
     void Start()
     {
         DontDestroyOnLoad(gameObject);
@@ -25,14 +28,29 @@ public class NetworkManager : Photon.MonoBehaviour
         // Auto-start connection if in offline mode and character exists
         SceneManager.sceneLoaded += (s, mode) =>
         {
+            if (s.name == "MainMenu")
+            {
+                _connectionRequested = false;
+                _lobbyFlowStarted = false;
+                _pendingSpawn = false;
+                __player = null;
+            }
+
             if (s.name == Menu.defaultLevel)
             {
                 Debug.LogWarning($"Hogwarts scene loaded. Checking if should auto-start...");
-                if (useOffline)
+
+                if (_pendingSpawn && PhotonNetwork.inRoom && __player == null)
+                {
+                    Debug.LogWarning("[NetworkManager] Scene ready and room joined. Spawning deferred player now.");
+                    _pendingSpawn = false;
+                    spawnPlayer();
+                }
+
+                if (useOffline && !PhotonNetwork.offlineMode && !PhotonNetwork.inRoom)
                 {
                     Debug.LogWarning("Auto-starting offline connection...");
-                    PhotonNetwork.JoinRandomRoom();
-                    // startConnection();
+                    startConnection();
                 }
             }
         };
@@ -82,16 +100,60 @@ public class NetworkManager : Photon.MonoBehaviour
 
     public void startConnection()
     {
+        if (_connectionRequested)
+        {
+            bool connectionStillActive = PhotonNetwork.connecting || PhotonNetwork.connected || PhotonNetwork.inRoom;
+            if (!connectionStillActive)
+            {
+                Debug.LogWarning("[NetworkManager] Clearing stale connection lock and retrying startConnection.");
+                _connectionRequested = false;
+                _lobbyFlowStarted = false;
+                _pendingSpawn = false;
+            }
+            else
+            {
+            Debug.LogWarning("[NetworkManager] Connection already requested, ignoring duplicate startConnection call.");
+            return;
+            }
+        }
+
+        _connectionRequested = true;
+
         if (useOffline)
         {
-            if (PhotonNetwork.offlineMode) return;// Execute once.
+            if (PhotonNetwork.offlineMode && PhotonNetwork.inRoom) return;// Execute once.
             PhotonNetwork.offlineMode = true;
             OnJoinedLobby();
             return;
         }
 
-        PhotonNetwork.ConnectUsingSettings(Menu.GAME_VERSION);
+        if (PhotonNetwork.connected && !PhotonNetwork.connecting)
+        {
+            Debug.LogWarning("[NetworkManager] Already connected to Photon. Continuing lobby flow.");
+            OnJoinedLobby();
+            return;
+        }
 
+        bool connectStarted = PhotonNetwork.ConnectUsingSettings(Menu.GAME_VERSION);
+        if (!connectStarted)
+        {
+            Debug.LogError("[NetworkManager] ConnectUsingSettings returned false. Resetting connection request state.");
+            _connectionRequested = false;
+            _lobbyFlowStarted = false;
+            _pendingSpawn = false;
+        }
+
+    }
+
+    public void OnConnectedToMaster()
+    {
+        Debug.LogWarning("[NetworkManager] OnConnectedToMaster() called.");
+        if (!_connectionRequested)
+        {
+            return;
+        }
+
+        OnJoinedLobby();
     }
 
     public void spawnPlayer()
@@ -133,16 +195,18 @@ public class NetworkManager : Photon.MonoBehaviour
             var timedDestruction = player.GetComponent<TimedObjectDestruction>();
             if (timedDestruction != null)
             {
-                timedDestruction.enabled = false;
-                Debug.LogWarning("[NetworkManager] TimedObjectDestruction disabled on player!");
+                timedDestruction.CancelInvoke();
+                Destroy(timedDestruction);
+                Debug.LogWarning("[NetworkManager] TimedObjectDestruction removed from player!");
             }
 
             // Also check children
             var timedDestructions = player.GetComponentsInChildren<TimedObjectDestruction>();
             foreach (var td in timedDestructions)
             {
-                td.enabled = false;
-                Debug.LogWarning($"[NetworkManager] TimedObjectDestruction disabled on child: {td.gameObject.name}");
+                td.CancelInvoke();
+                Destroy(td);
+                Debug.LogWarning($"[NetworkManager] TimedObjectDestruction removed from child: {td.gameObject.name}");
             }
 
             if (player != null){
@@ -263,6 +327,27 @@ public class NetworkManager : Photon.MonoBehaviour
         }
         player.transform.Find("NamePlate").gameObject.SetActive(false);
 
+        // Local player should not render world-space helper UI panel.
+        // var helperPanel = player.transform.Find("Panel");
+        // if (helperPanel != null)
+        // {
+        //     helperPanel.gameObject.SetActive(false);
+        // }
+
+        // // Hide debug/selection plane under the local player.
+        // var pickedView = player.transform.Find("pickedView");
+        // if (pickedView != null)
+        // {
+        //     var pickedRenderer = pickedView.GetComponent<Renderer>();
+        //     if (pickedRenderer != null)
+        //     {
+        //         pickedRenderer.enabled = false;
+        //     }
+        //     pickedView.gameObject.SetActive(false);
+        // }
+
+        DisableProblemRenderers(player);
+
         // Set minimap target (with null checks)
         var miniMapCamera = GameObject.Find("MiniMapCamera");
         if (miniMapCamera != null)
@@ -300,7 +385,8 @@ public class NetworkManager : Photon.MonoBehaviour
             }
             else
             {
-                Debug.LogWarning("[NetworkManager] Renderer component or mmarow texture is null!");
+                indicator.gameObject.SetActive(false);
+                Debug.LogWarning("[NetworkManager] Renderer component or mmarow texture is null. Indicator disabled.");
             }
         }
         else
@@ -324,8 +410,20 @@ public class NetworkManager : Photon.MonoBehaviour
     void OnJoinedLobby()
     {
         Debug.LogWarning("OnJoinedLobby() called");
+
+        if (_lobbyFlowStarted)
+        {
+            Debug.LogWarning("[NetworkManager] Lobby flow already started, ignoring duplicate OnJoinedLobby.");
+            return;
+        }
+
+        _lobbyFlowStarted = true;
+
         PhotonNetwork.LoadLevel(Menu.defaultLevel);
-        PhotonNetwork.JoinRandomRoom();
+        if (!PhotonNetwork.inRoom)
+        {
+            PhotonNetwork.JoinRandomRoom();
+        }
         //Menu.Instance.showPanel("LoadingPanel");
     }
     //private void OnLevelWasLoaded(int level)
@@ -335,6 +433,19 @@ public class NetworkManager : Photon.MonoBehaviour
     void OnJoinedRoom()
     {
         Debug.LogWarning("OnJoinedRoom() called - about to spawn player");
+        if (__player != null)
+        {
+            Debug.LogWarning("[NetworkManager] __player already exists. Skipping duplicate spawn.");
+            return;
+        }
+
+        if (SceneManager.GetActiveScene().name != Menu.defaultLevel)
+        {
+            _pendingSpawn = true;
+            Debug.LogWarning("[NetworkManager] Joined room before scene load finished. Deferring spawn.");
+            return;
+        }
+
         spawnPlayer();
     }
     
@@ -352,24 +463,34 @@ public class NetworkManager : Photon.MonoBehaviour
 
     public void OnPhotonCreateRoomFailed()
     {
-
+        _connectionRequested = false;
+        _lobbyFlowStarted = false;
+        _pendingSpawn = false;
         Debug.Log("OnPhotonCreateRoomFailed got called. This can happen if the room exists (even if not visible). Try another room name.");
     }
 
     public void OnPhotonJoinRoomFailed()
     {
-
+        _connectionRequested = false;
+        _lobbyFlowStarted = false;
+        _pendingSpawn = false;
         Debug.Log("OnPhotonJoinRoomFailed got called. This can happen if the room is not existing or full or closed.");
     }
 
     public void OnDisconnectedFromPhoton()
     {
+        _connectionRequested = false;
+        _lobbyFlowStarted = false;
+        _pendingSpawn = false;
+        __player = null;
         Debug.Log("Disconnected from Photon.");
     }
 
     public void OnFailedToConnectToPhoton(object parameters)
     {
-
+        _connectionRequested = false;
+        _lobbyFlowStarted = false;
+        _pendingSpawn = false;
         Debug.Log("OnFailedToConnectToPhoton. StatusCode: " + parameters + " ServerAddress: " + PhotonNetwork.networkingPeer.ServerAddress);
     }
 
@@ -396,5 +517,34 @@ public class NetworkManager : Photon.MonoBehaviour
             }
         }
         return isOk;
+    }
+
+    private static void DisableProblemRenderers(GameObject player)
+    {
+        var renderers = player.GetComponentsInChildren<Renderer>(true);
+        foreach (var renderer in renderers)
+        {
+            if (renderer is SkinnedMeshRenderer)
+            {
+                continue;
+            }
+
+            string objName = renderer.gameObject.name.ToLowerInvariant();
+            bool isKnownHelper = objName.Contains("pickedview") || objName.Contains("indicator") || objName.Contains("panel");
+
+            var meshFilter = renderer.GetComponent<MeshFilter>();
+            bool isPlaneMesh = meshFilter != null && meshFilter.sharedMesh != null &&
+                               (meshFilter.sharedMesh.name.ToLowerInvariant().Contains("quad") ||
+                                meshFilter.sharedMesh.name.ToLowerInvariant().Contains("plane"));
+
+            bool hasBrokenShader = renderer.sharedMaterial == null ||
+                                   renderer.sharedMaterial.shader == null ||
+                                   renderer.sharedMaterial.shader.name == "Hidden/InternalErrorShader";
+
+            if (isKnownHelper || (isPlaneMesh && hasBrokenShader))
+            {
+                renderer.enabled = false;
+            }
+        }
     }
 }

@@ -30,6 +30,11 @@ public class PlayerCombat : MonoBehaviour {
 	public void spellCast(int key)
 	{
 		Debug.LogWarning($"[PlayerCombat.spellCast] Called with key index: {key}");
+
+		if (!Player.Instance.characterData.isSpellUnlocked(key)) {
+			Debug.LogWarning($"[PlayerCombat.spellCast] Spell index {key} is locked.");
+			return;
+		}
 		
 		if (Player.Instance.target == null) {
 			Debug.LogError("[PlayerCombat.spellCast] NO TARGET! Returning without casting.");
