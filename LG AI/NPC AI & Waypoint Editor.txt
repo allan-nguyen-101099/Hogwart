@@ -1,0 +1,463 @@
+=========================================
+NPC AI & WAYPOINT EDITOR SYSTEM
+=========================================
+Project: Open Hogwarts (Unity)
+Overview: How NPCs behave, patrol, fight, and respawn
+
+--------------------------------------------------
+1) ARCHITECTURE OVERVIEW
+--------------------------------------------------
+
+The NPC system consists of 3 main layers:
+
+1. DATA LAYER (Persistence)
+   - NPCData: Runtime NPC state (id, name, level, health, AI params)
+   - NPCTemplate: Static archetypes (defines NPC class: Human, Spider, etc.)
+   - WaypointData: Patrol points for each NPC (x, y, z coordinates)
+   - Database: iBoxDB Local (all stored in offline mode)
+
+2. BEHAVIOR LAYER (AI Brain)
+   - NPC.cs: Main behavior engine
+   - NPCManager.cs: Respawn coordinator
+   - NPCDetector.cs: Proximity detection (enable/disable nearby NPCs)
+
+3. EDITOR LAYER (Creation/Editing)
+   - In-game waypoint editor (drag and place waypoints)
+   - Database CRUD for waypoints during gameplay
+
+
+--------------------------------------------------
+2) NPC DATA STRUCTURE (NPCData)
+--------------------------------------------------
+
+Purpose: Represents one NPC instance in game
+
+Key Properties:
+  - id: Unique NPC identifier (primary key)
+  - template: Which NPC archetype (e.g., CastleSpider=1, Human=2)
+  - name: Display name ("Aragog", "Hagrid", etc.)
+  - level: NPC level (affects damage/exp)
+  - health: Current HP (decreases during combat)
+  - race: Monster or Human (determines aggression style)
+  - subRace: Normal, Seller, Quest, or Talker (NPC purpose)
+  - damage: Attack power per hit
+  - expValue: XP reward when killed
+  - attackRange: Melee reach (e.g., 2 = 2 units close combat)
+  - isAggressive: Whether NPC attacks on sight
+  - distanceToLoseAggro: Max chase distance (e.g., 30 units)
+  - runSpeed: Movement speed (5 = normal walk)
+  - attacksPerSecond: Attack frequency (1 = one attack per second)
+  - waypoints: List<WaypointData> (loaded dynamically from DB)
+
+CRUD Operations:
+  - Read: NPC.get(id) → SelectKey<NPCData>("npc", id)
+  - Create: data.create() → Insert("npc", obj)
+  - Update: data.save() → Update("npc", obj)
+  - Delete: Service.db.Delete("npc", id) [on reset]
+
+
+--------------------------------------------------
+3) WAYPOINT DATA STRUCTURE (WaypointData)
+--------------------------------------------------
+
+Purpose: Define patrol path for one NPC
+
+Key Properties:
+  - id: Unique waypoint identifier (auto-generated)
+  - npc: Which NPC this waypoint belongs to (foreign key to NPCData.id)
+  - x, y, z: World position coordinates
+  - position: Convenience property that converts x,y,z to Vector3
+
+Database Index: 
+  - Non-unique index on "npc" field (allows multiple waypoints per NPC)
+  - Ordered by id ascending to maintain sequence
+
+CRUD Operations:
+  - Read: Service.db.Select<WaypointData>("FROM waypoint_data WHERE npc == ? ORDER BY id asc", npc_id)
+  - Create: data.create() → Auto-generates id via Service.db.Id(1), then Insert("waypoint_data", obj)
+  - Update: data.save() → Update("waypoint_data", obj)
+  - Delete: data.delete() → Delete("waypoint_data", this.id)
+
+Example Patrol Path:
+  NPC #5 (Aragog) has 4 waypoints:
+    - Waypoint 1: x=10, y=0, z=20 (start position)
+    - Waypoint 2: x=25, y=0, z=20 (east)
+    - Waypoint 3: x=25, y=0, z=5 (north)
+    - Waypoint 4: x=10, y=0, z=5 (back to start)
+  NPC loops through them: 1 → 2 → 3 → 4 → 1 → 2 → ... (repeats)
+
+
+--------------------------------------------------
+4) AI BEHAVIOR FLOW (Update Loop)
+--------------------------------------------------
+
+The NPC.Update() method runs every frame and follows this logic:
+
+┌─────────────────────────────────────────┐
+│ Is NPC Dead?                            │
+├─────────────────────────────────────────┤
+│ YES → Send kill notifications           │
+│       Play death animation              │
+│       Call NPCManager.prepareRespawn()  │
+│       Return (skip rest)                │
+│ NO  → Continue...                       │
+└─────────────────────────────────────────┘
+                   ↓
+┌─────────────────────────────────────────┐
+│ Is NPC too far from spawn point?        │
+├─────────────────────────────────────────┤
+│ Distance > distanceToLoseAggro?         │
+│ YES → Set backToIPos = true             │
+│ NO  → Continue...                       │
+└─────────────────────────────────────────┘
+                   ↓
+┌─────────────────────────────────────────┐
+│ Do we have a target player?             │
+├─────────────────────────────────────────┤
+│ YES → Check if still in aggro range     │
+│       if in range: EnableCombat = true  │
+│       if out of range: target = null    │
+│ NO  → Continue...                       │
+└─────────────────────────────────────────┘
+                   ↓
+┌─────────────────────────────────────────┐
+│ COMBAT PHASE                            │
+├─────────────────────────────────────────┤
+│ if EnableCombat:                        │
+│   1. Face target                        │
+│   2. Check distance > attackRange?      │
+│      YES → RUN toward target            │
+│      NO  → IDLE                         │
+│   3. Check timeSinceLastAttack > 1/attacksPerSecond?
+│      YES → ATTACK animation             │
+│           Send damage RPC to player     │
+│      NO  → Wait                         │
+│ Continue to step 5...                   │
+└─────────────────────────────────────────┘
+                   ↓
+┌─────────────────────────────────────────┐
+│ PATROL PHASE (if not in combat)         │
+├─────────────────────────────────────────┤
+│ if backToIPos:                          │
+│   - RUN toward initialPos               │
+│   - Restore health when returning       │
+│                                         │
+│ else (at spawn point):                  │
+│   if waypoints.Count == 0:              │
+│     - IDLE                              │
+│   else:                                 │
+│     - followPoint()                     │
+│     - Move to waypoints[currentWaypoint]
+│     - When reached: pause 1-3 sec       │
+│     - Increment currentWaypoint         │
+│     - Loop back to waypoint 0 when done │
+└─────────────────────────────────────────┘
+                   ↓
+┌─────────────────────────────────────────┐
+│ Update nameplate health bar             │
+└─────────────────────────────────────────┘
+
+
+--------------------------------------------------
+5) WAYPOINT FOLLOW LOGIC (followPoint method)
+--------------------------------------------------
+
+Purpose: Move NPC to next waypoint in patrol sequence
+
+Algorithm:
+1. Get target position: waypoints[currentWaypoint].position
+2. Calculate move direction: initialPos + target (relative)
+   (waypoints are relative offsets from spawn, not absolute)
+3. Loop until NPC reaches waypoint:
+   - Calculate distance to waypoint
+   - if distance < 1.0 unit (detection radius):
+     * Pause 1-3 seconds at waypoint (random)
+     * currentWaypoint++
+     * When currentWaypoint >= waypoints.Count: reset to 0 (loop)
+   - else (still moving to waypoint):
+     * Play WALK animation
+     * Move toward waypoint at runSpeed
+     * Rotate body toward waypoint
+
+Result: NPC smoothly patrols through waypoint sequence with pauses
+
+
+--------------------------------------------------
+6) COMBAT MECHANICS
+--------------------------------------------------
+
+How combat starts:
+1. Player enters NPC.distanceToLoseAggro range (e.g., 30 units)
+2. NPC detects player via line of sight (raycast planned)
+3. NPC sets EnableCombat = true
+
+Combat actions:
+- NPC faces target (rotate toward)
+- NPC chases if > attackRange away
+- NPC attacks if < attackRange AND timeSinceLastAttack > 1/attacksPerSecond
+  * Sends RPC to player: "getDamage(damage, npcViewID)"
+  * Player receives damage and updates health bar
+  * Player adds NPC to "attackers" dictionary (for kill credit)
+
+Aggro loss:
+- Player moves beyond distanceToLoseAggro: aggro lost, return to waypoint
+- NPC moves too far from spawn point: return to initial position
+- Player dies: NPC stops attacking, returns to patrol
+
+Damage tracking:
+- Dictionary<Player, int> attackers: tracks total damage per player
+- On NPC death: each attacker gets kill notification with XP
+- Kill credit logic: "Most Damage Dealt" gets primary kill rewards
+
+
+--------------------------------------------------
+7) RESPAWN SYSTEM (NPCManager)
+--------------------------------------------------
+
+When NPC dies (health < 1):
+
+1. Send kill notifications to all attackers
+   Service.db.Insert("tasks", new Task { ... }) records kill
+   Player receives XP notification
+
+2. Play death animation
+   NPC.changeAnimation(AnimationStates.DEATH)
+
+3. Call NPCManager.Instance.prepareRespawn(npc)
+
+Respawn coroutine (10 seconds total):
+   - Wait 10 seconds (allows looting)
+   - Disable nameplate and NPC GameObject
+   - Wait 3 seconds (loading time)
+   - Enable nameplate and NPC GameObject
+   - Call npc.reset()
+
+Reset process:
+   - health = maxHealth
+   - target = null
+   - EnableCombat = false
+   - transform.position = originalPosition
+   - currentWaypoint = 0 (restart patrol from beginning)
+   - attackers.Clear() (reset damage tracking)
+
+Result: NPC fully restored, begins patrol again
+
+
+--------------------------------------------------
+8) NPC ACTIVATION (NPCDetector)
+--------------------------------------------------
+
+Purpose: Improve performance by only running active NPCs
+
+How it works:
+- Keep all NPCs disabled by default in scene
+- NPCDetector monitors player position
+- When player enters proximity (radius ≈ 50 units):
+  * Call npc.setEnabled(true)
+  * Animation enabled, nameplate enabled
+  * Components in toDisable list enabled
+- When player leaves proximity:
+  * Call npc.setEnabled(false)
+  * Disable animation and nameplate
+  * Disable expensive components (colliders, etc.)
+
+Performance benefit: Only 5-10 active NPCs instead of 100+
+
+
+--------------------------------------------------
+9) NPC TYPES (SUBRACE)
+--------------------------------------------------
+
+Normal: Regular combat NPC
+  - Can be aggressive or friendly
+  - Patrols waypoints when idle
+  - Fights players on sight if isAggressive
+
+Seller: Shop merchant
+  - Friendly (not aggressive)
+  - No waypoints (static position)
+  - OnMouseDown triggers shop UI
+  - Cursor changes to BUY icon on hover
+
+Quest: Quest giver
+  - Friendly, static position
+  - OnMouseDown triggers quest dialog
+  - Cursor changes to QuestAvailable icon
+  - Players can accept/turn in quests
+
+Talker: NPC with dialog
+  - Friendly, static position
+  - OnMouseDown triggers dialog system
+  - Cursor changes to TALK icon
+  - No combat or quests
+
+
+--------------------------------------------------
+10) WAYPOINT EDITOR (MANUAL SETUP)
+--------------------------------------------------
+
+Current state: No visual in-game editor exists yet
+
+How waypoints are currently set:
+1. Designer uses database directly (iBoxDB Admin tool)
+2. OR designer manually calls:
+   - WaypointData waypoint = new WaypointData { npc = 5, x = 10, y = 0, z = 20 }
+   - waypoint.create()  // Saves to DB
+
+Future waypoint editor features (not yet implemented):
+- In-game gizmo to place waypoints by dragging
+- Right-click NPC → "Edit Waypoints"
+- Visual path visualization (lines connecting waypoints)
+- Gizmo handles to adjust waypoint positions
+- Context menu to add/delete waypoints
+- Persistent save to iBoxDB
+
+Example implementation pattern would be:
+  if (Input.GetMouseButton(1) && selectedNPC != null) {
+    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+    if (Physics.Raycast(ray, out hit)) {
+      WaypointData wp = new WaypointData { npc = selectedNPC.Id, position = hit.point };
+      wp.create();
+      selectedNPC.data.waypoints.Add(wp);
+    }
+  }
+
+
+--------------------------------------------------
+11) NPC SELECTION & INTERACTION
+--------------------------------------------------
+
+Mouse interaction (from NPC.OnMouseDown):
+1. Player clicks NPC → setSelected(true)
+2. If NPC is aggressive:
+   - Set as Player.Instance.target
+   - Highlights NPC with selection outline
+3. If NPC is friendly:
+   - Highlight nameplate as selected
+   - Check interaction type:
+     * Seller: Open shop panel
+     * Quest: Open quest dialog
+     * Talker: Open dialog system
+
+Interaction check: isInInteractionRange
+- Player must be within 5 units of NPC
+- If farther: alert player, action fails
+- Enforced in all click handlers
+
+Cursor feedback:
+- Hover over aggressive NPC: Cursor.Attack
+- Hover over Seller: Cursor.Buy
+- Hover over dead NPC: Cursor.Buy (loot)
+- Hover over Quest giver: Cursor.QuestAvailable
+- Hover over Talker: Cursor.Talk
+
+
+--------------------------------------------------
+12) NETWORK SYNC (PHOTON)
+--------------------------------------------------
+
+NPC position/rotation sync:
+- Master client runs NPC AI (Update/FixedUpdate)
+- Master sends position/rotation every frame via OnPhotonSerializeView
+- Other clients receive and lerp (smooth interpolation)
+- SmoothingDelay = 5 (frames to lerp over)
+
+Combat RPC calls:
+- Master client calls: getDamage(damage, attacker_viewID)
+- Sends to all clients so they see damage numbers
+- RPC: "addKill" sent to all players who damaged dead NPC
+
+NPC ownership:
+- Static NPCs (Sellers, Quest givers): photonView = null (not networked)
+- Combat NPCs: photonView assigned, owned by master
+
+Respawn:
+- NPCManager.prepareRespawn() runs on master only
+- Other clients see respawn via OnPhotonSerializeView (NPC reappears)
+
+
+--------------------------------------------------
+13) KEY SCRIPT LOCATIONS & ENTRY POINTS
+--------------------------------------------------
+
+Reading/Creating NPCs:
+  Assets/Scripts/NPC/NPCData.cs → NPCData.create(), .save(), static get(id)
+
+Patrol/Combat AI:
+  Assets/Scripts/NPC/NPC.cs → Update() [main brain]
+                           → followPoint() [waypoint patrol]
+                           → Update() combat section [combat logic]
+
+Waypoint management:
+  Assets/Scripts/NPC/WaypointData.cs → create(), save(), delete()
+
+Respawn handling:
+  Assets/Scripts/NPC/NPCManager.cs → prepareRespawn(), respawn()
+
+NPC detection/activation:
+  Assets/Scripts/Player/NPCDetector.cs → monitors proximity
+
+Seeding initial NPCs:
+  Assets/Scripts/Util/DBSetup.cs → insertNPCTemplates(), insertNPCs()
+
+
+--------------------------------------------------
+14) COMMON PATTERNS IN CODE
+--------------------------------------------------
+
+Pattern 1: Get NPC by ID
+  NPCData data = NPC.get(npcId);
+
+Pattern 2: Update NPC stats
+  npc.data.health -= damage;
+  npc.data.save();  // Persist to DB
+
+Pattern 3: Create new waypoint
+  WaypointData wp = new WaypointData { npc = npc.Id, x = 10, y = 0, z = 5 };
+  wp.create();
+
+Pattern 4: Get all waypoints for NPC
+  List<WaypointData> waypoints = Service.db.Select<WaypointData>(
+    "FROM waypoint_data WHERE npc == ? ORDER BY id asc", npc.Id
+  );
+
+Pattern 5: Enable/disable NPC
+  npc.setEnabled(true);   // Activate for combat
+  npc.setEnabled(false);  // Deactivate when far away
+
+Pattern 6: Apply status effects
+  npc.StunSelf(2.0f);        // Stun for 2 seconds
+  npc.SlowAttackSpeed(0.5f); // Half attack speed
+  npc.KnockBackSelf();       // Apply knockback
+
+
+--------------------------------------------------
+15) CURRENT LIMITATIONS & TODO
+--------------------------------------------------
+
+✅ Completed:
+- NPC patrol via waypoints (follows sequence, pauses)
+- Combat with players (chase, attack, damage sync)
+- Respawn system (10 second wait, full reset)
+- Aggro mechanics (gain/lose based on distance)
+- Multiple NPC types (Normal, Seller, Quest, Talker)
+- Performance optimization (enable/disable by proximity)
+- Animation system (Idle, Walk, Run, Attack, Death)
+- Status effects framework (Stun, Slow, KnockBack)
+- Kill credit tracking (most damage = primary kill)
+
+⏳ Partially done:
+- Line of sight detection (planned, not implemented)
+  Currently: distance-based aggro only
+- Knockback/Stun/Slow effects (coroutines exist, need implementation)
+- Waypoint visual editor (manual DB setup only)
+
+❌ Not yet implemented:
+- In-game waypoint placement editor
+- Formation/pack AI (multiple NPCs coordinating)
+- Dialogue trees (framework exists, not connected)
+- Loot drops on death
+- Boss mechanics (phase changes, special attacks)
+- Voice lines/audio
+- Dynamic difficulty scaling
+- NPC inventory/equipment

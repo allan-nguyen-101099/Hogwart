@@ -1,198 +1,333 @@
-=====================================
-OPEN HOGWARTS - FULL ONLINE FLOW
-=====================================
+===============================================
+OPEN HOGWARTS - FULL ONLINE MODE FLOW (DETAILED)
+===============================================
+Current target: Match the exact behavior of current scripts.
+Source scripts aligned with this flow:
+- Assets/Scripts/NetworkManager.cs
+- Assets/Scripts/UI/Menu.cs
+- Assets/Scripts/UI/Panels/MainPanel.cs
+- Assets/Scripts/UI/Panels/CreatePanel.cs
+- Assets/Scripts/Player/Player.cs
+- Assets/Scripts/Player/PlayerHotkeys.cs
+- Assets/Scripts/Player/PlayerCombat.cs
+- Assets/Scripts/Player/NPCActivator.cs
 
-=====================================
-Phase 1: Game Launch → MainMenu Scene
-=====================================
+=====================================================
+Phase 1: App Launch -> MainMenu Scene
+=====================================================
 
-1. MainMenu scene loads
+1) Unity loads scene "MainMenu" (from Build Settings order).
 
-2. GameObject "NetworkManager" is active
-   → NetworkManager.Start() executes:
-      - DontDestroyOnLoad(gameObject)  // persists across scenes
-      - Instance = this                // singleton reference
-      - Registers sceneLoaded callback (fallback, not used in normal flow)
+2) GameObject "NetworkManager" is active in MainMenu.
+   -> NetworkManager.Start() runs:
+      a) DontDestroyOnLoad(gameObject)
+         - NetworkManager persists across scene transitions.
+      b) Instance = this
+         - Singleton reference for UI panels and other scripts.
+      c) Registers SceneManager.sceneLoaded lambda callback:
+         - If loaded scene name equals Menu.defaultLevel ("Hogwarts")
+         - AND useOffline == true
+         - Then call PhotonNetwork.JoinRandomRoom()
 
-3. GameObject "Canvas" (with Menu.cs) is active
-   → Menu.Awake() executes:
-      - DontDestroyOnLoad(canvas)
-      - DontDestroyOnLoad(EventSystem)
-      - _instance = this
-      - Registers SceneManager.sceneLoaded += OnLevelFinishedLoading
+   IMPORTANT:
+   - This callback path is intended for offline behavior.
+   - In normal online mode, useOffline should be false, so this callback does nothing.
 
-4. Menu.OnLevelFinishedLoading("MainMenu") fires:
-   → showPanel("MainPanel")
+3) GameObject "Canvas" with Menu.cs is active.
+   -> Menu.Awake() runs:
+      a) DontDestroyOnLoad(canvas)
+      b) DontDestroyOnLoad(EventSystem)
+      c) SceneManager.sceneLoaded += OnLevelFinishedLoading
+      d) _instance = this
 
-5. MainPanel.OnEnable() fires:
-   → Checks DB: Service.db.SelectCount("FROM item") < 1?
-      - If yes → DBSetup.start() (inserts items, NPCs, etc.)
-   → Queries: Service.db.Select<CharacterData>("FROM characters")
-      - If character exists → shows name, level, JoinButton
-      - If no character → shows CreateButton
+4) Menu.OnLevelFinishedLoading(scene = "MainMenu") runs:
+   -> showPanel("MainPanel")
 
-=====================================
-Phase 2a: Create Character (if no character exists)
-=====================================
+5) MainPanel.OnEnable() runs:
+   a) If Service.db.SelectCount("FROM item") < 1:
+      -> DBSetup.start() seeds database data (items, NPC templates, etc.)
+   b) Query characters table:
+      -> foreach CharacterData in Service.db.Select<CharacterData>("FROM characters")
+      -> takes first character found, then breaks
+   c) If a character exists:
+      - Show nickLabel
+      - Show level label
+      - Show JoinButton
+      - Hide CreateButton
+      - Wire JoinButton.onClick -> joinGame(character.id, character.name)
+   d) If no character exists:
+      - Hide JoinButton and labels
+      - Create button remains available
 
-6. User clicks "Create Character" button
-   → CreatePanel is shown
+=====================================================
+Phase 2A: Create Character (No Existing Character)
+=====================================================
 
-7. User types name, selects house, clicks Create
-   → CreatePanel.createButton():
-      - Validates name (not empty, >= 3 chars)
-      - Initializes DB if needed
-      - Creates CharacterData (id=1, level=1, 270 HP, 100 mana, 100 gold)
-      - character.create() → inserts into iBoxDB
-      - Menu.Instance.showPanel("MainPanel") → goes back to MainPanel
+6) Player clicks Create button in MainPanel.
+   -> CreatePanel becomes active.
 
-8. MainPanel.OnEnable() fires again:
-   → Now finds the character in DB
-   → Shows name, level, JoinButton
+7) CreatePanel.OnEnable() runs:
+   - Auto-finds UI references if inspector links are missing:
+     a) nameInput
+     b) houseDropdown
+     c) errorText
 
-=====================================
-Phase 2b: Join Game (character exists)
-=====================================
+8) Player enters name and clicks Create.
+   -> CreatePanel.createButton() runs:
 
-9. User clicks "Join" button
-   → MainPanel.joinGame(characterId, name):
-      - Creates Hashtable with characterId
-      - PhotonNetwork.player.SetCustomProperties(h)
-      - PhotonNetwork.player.NickName = name
-      - NetworkManager.Instance.startConnection()
+   Validation:
+   a) nameInput must exist
+   b) characterName = nameInput.text.Trim()
+   c) must not be empty
+   d) length must be >= 3
 
-=====================================
-Phase 3: Network Connection (Online Mode)
-=====================================
+   DB prep:
+   e) If item table empty -> DBSetup.start()
 
-10. NetworkManager.startConnection():
-    - useOffline == false (online mode)
-    - PhotonNetwork.ConnectUsingSettings("0.01")
-      → Photon SDK connects to Photon Cloud servers
-      → Handshake, authentication, etc.
+   Character creation:
+   f) Create CharacterData with:
+      - id = 1
+      - name = entered name
+      - model = "Default"
+      - level = 1
+      - house = houseDropdown.value (or 0 if dropdown missing)
+      - health/maxHealth = 270/270
+      - mana/maxMana = 100/100
+      - exp = 0
+      - money = 100
+      - position = "(633.51, 161.38, 415.70)"
+   g) success = character.create()
+      - Inserts into local iBoxDB
 
-11. Photon connection succeeds
-    → Photon SDK automatically calls NetworkManager.OnJoinedLobby()
-       (because NetworkManager extends Photon.MonoBehaviour)
+   If success:
+   h) Build Photon custom props hashtable with characterId
+   i) PhotonNetwork.player.SetCustomProperties(h)
+   j) PhotonNetwork.player.NickName = character.name
+   k) NetworkManager.Instance.startConnection()
 
-=====================================
-Phase 4: Join Lobby → Load Hogwarts
-=====================================
+   NOTE:
+   - In current code, CreatePanel does NOT return to MainPanel first.
+   - It directly starts connection after successful character creation.
 
-12. NetworkManager.OnJoinedLobby():
-    - PhotonNetwork.LoadLevel("Hogwarts")
-      → Internally calls SceneManager.LoadScene("Hogwarts")
-      → MainMenu scene unloads (except DontDestroyOnLoad objects)
-      → Hogwarts scene loads
-    - PhotonNetwork.JoinRandomRoom()
-      → Asks Photon server to join any available room
+=====================================================
+Phase 2B: Join Existing Character From MainPanel
+=====================================================
 
-=====================================
-Phase 5: Join/Create Room
-=====================================
+9) Player clicks Join on MainPanel.
+   -> MainPanel.joinGame(characterId, name) runs:
+      a) Guard: if characterId < 1 return
+      b) Create Hashtable with { "characterId": characterId }
+      c) PhotonNetwork.player.SetCustomProperties(h)
+      d) PhotonNetwork.player.NickName = name
+      e) NetworkManager.Instance.startConnection()
+      f) Join button text set to "CONNECTING..." (localized)
 
-13a. If a room exists with space:
-    → Photon server assigns player to that room
-    → NetworkManager.OnJoinedRoom() is called
-    → Go to Phase 6
+=====================================================
+Phase 3: Network Connection Entry (Online Mode)
+=====================================================
 
-13b. If NO room exists (JoinRandom fails):
-    → NetworkManager.OnPhotonRandomJoinFailed()
-       - PhotonNetwork.CreateRoom(null)  // creates a new room with random name
-    → Room is created on Photon server
-    → NetworkManager.OnJoinedRoom() is called
-    → Go to Phase 6
+10) NetworkManager.startConnection() runs.
 
-=====================================
-Phase 6: Spawn Player in Hogwarts
-=====================================
+11) Branch check:
+   - If useOffline == true:
+     a) If PhotonNetwork.offlineMode already true -> return
+     b) Set PhotonNetwork.offlineMode = true
+     c) Call OnJoinedLobby() directly
+   - Else (ONLINE MODE expected):
+     d) Call PhotonNetwork.ConnectUsingSettings(Menu.GAME_VERSION)
+        where Menu.GAME_VERSION = "0.01"
 
-14. NetworkManager.OnJoinedRoom():
-    → spawnPlayer()
+12) Photon connects/authenticates to Photon Cloud.
+    -> Photon callback OnJoinedLobby() is triggered.
 
-15. NetworkManager.spawnPlayer():
-    - Queries DB: Service.db.Select<CharacterData>("FROM characters").FirstOrDefault()
-    - If character == null → error, abort
+=====================================================
+Phase 4: Lobby Callback -> Scene Load + Room Join
+=====================================================
 
-    - PhotonNetwork.Instantiate("Characters/Player", position, rotation, 0)
-      → Loads prefab from Resources/Characters/Player
-      → Instantiates locally AND notifies all other players in the room
-      → Other players also instantiate this player's avatar on their side
+13) NetworkManager.OnJoinedLobby() runs:
+    a) PhotonNetwork.LoadLevel(Menu.defaultLevel)
+       - Menu.defaultLevel is "Hogwarts"
+       - MainMenu unloads
+       - DontDestroyOnLoad objects persist:
+         * NetworkManager
+         * Canvas
+         * EventSystem
+    b) PhotonNetwork.JoinRandomRoom()
 
-    - Sets up player GameObject:
-      a) player.GetComponent<Player>().characterData = character
-      b) Finds "Main Camera" child → sets CameraController.cameraTarget
-      c) Enables ThirdPersonUserControl (input)
-      d) Enables ThirdPersonCharacter (animation/physics)
-      e) Enables PlayerHotkeys (spell keybinds)
-      f) Enables PlayerCombat
-      g) Activates "Main Camera" child object
-      h) Deactivates "NamePlate" (own name not shown to self)
-      i) Sets MiniMapCamera target = player.transform
-      j) Sets MiniMapElementsCamera target = player.transform
-      k) Sets ConfigMenu.player reference
-      l) Sets Indicator texture (arrow on minimap)
+14) Menu.OnLevelFinishedLoading(scene = "Hogwarts") runs:
+    Since scene != "MainMenu", it shows gameplay HUD panels:
+    a) showPanel("PlayerPanel")
+    b) showPanel("ChatPanel", false)
+    c) showPanel("TopMenu", false)
+    d) showPanel("MiniMap", false)
 
-=====================================
-Phase 7: UI Switches to Gameplay HUD
-=====================================
+=====================================================
+Phase 5: Room Assignment / Room Creation
+=====================================================
 
-16. Menu.OnLevelFinishedLoading("Hogwarts") fires (scene != "MainMenu"):
-    → showPanel("PlayerPanel")       // HP/Mana orbs, XP bar
-    → showPanel("ChatPanel", false)  // Chat window (no hide others)
-    → showPanel("TopMenu", false)    // Config, inventory buttons
-    → showPanel("MiniMap", false)    // Minimap overlay
+15) If random room exists and has slot:
+    -> Photon joins that room
+    -> OnJoinedRoom() callback fires
 
-=====================================
-Phase 8: Gameplay Active
-=====================================
+16) If random room join fails:
+    -> NetworkManager.OnPhotonJoinRandomFailed(object[] codeAndMsg) fires
+    -> PhotonNetwork.CreateRoom(null) is called
+       - Creates room with random generated name
+    -> OnCreatedRoom() callback may fire
+    -> Then OnJoinedRoom() callback fires once join is complete
 
-17. Player.Start():
-    - _instance = this (singleton)
-    - SkillsUI.Instance.displayUnlockedSkills()
-    - Starts health regeneration coroutine
-    - Starts mana regeneration coroutine
-    - Destroys trailRenderer on own player
+=====================================================
+Phase 6: Player Spawn in Hogwarts
+=====================================================
 
-18. Player.Update() (every frame):
-    - Updates health bar lerp animation
-    - Checks if player fell below y=-100 → Respawn()
+17) NetworkManager.OnJoinedRoom() runs:
+    -> spawnPlayer()
 
-19. ThirdPersonUserControl reads Input → moves character
-20. CameraController follows player transform
-21. PlayerHotkeys listens for spell/mount keybinds
-22. PlayerCombat handles targeting and damage
-23. NPCActivator enables/disables NPCs based on distance
+18) NetworkManager.spawnPlayer() detailed flow:
 
-=====================================
-Summary Diagram
-=====================================
+   Character source:
+   a) character = Service.db.Select<CharacterData>("FROM characters").FirstOrDefault()
+   b) If character == null -> log error and return
 
-MainMenu Scene                          Hogwarts Scene
-─────────────────                       ──────────────────
-CreatePanel                             
-  │ (create char + save to DB)          
-  ▼                                     
-MainPanel                               
-  │ (click Join)                        
-  ▼                                     
-NetworkManager.startConnection()        
-  │                                     
-  ▼                                     
-PhotonNetwork.ConnectUsingSettings()    
-  │ (connects to cloud)                 
-  ▼                                     
-OnJoinedLobby()                         
-  │── PhotonNetwork.LoadLevel() ──────► Hogwarts scene loads
-  │── PhotonNetwork.JoinRandomRoom()    
-  ▼                                       ▼
-OnJoinedRoom()                          Menu shows PlayerPanel/Chat/MiniMap
-  │                                     
-  ▼                                     
-spawnPlayer()                           
-  │                                     
-  ▼                                     
-Player prefab instantiated + configured 
-  │                                     
-  ▼                                     
-GAMEPLAY ACTIVE                         
+   Photon instantiate:
+   c) player = PhotonNetwork.Instantiate(
+         "Characters/Player",
+         new Vector3(633.51f, 161.38f, 415.70f),
+         Quaternion.identity,
+         0)
+   d) If player == null -> log error and return
+   e) __player = player
+
+   Safety:
+   f) Disable TimedObjectDestruction on player and children if present
+
+   Data binding:
+   g) player.GetComponent<Player>().characterData = character
+
+   Camera setup:
+   h) Find child "Main Camera" (fallback: first camera in children)
+   i) CameraChecker.SetCamera(cameraComponent)
+   j) Enable camera component
+   k) If CameraController exists:
+      - set cameraTarget = player.transform
+      - if desiredDistance <= 0, set to 6
+      - enable controller
+   l) Activate Main Camera gameobject
+
+   Control setup:
+   m) Enable ThirdPersonUserControl
+   n) Enable ThirdPersonCharacter
+   o) Enable PlayerHotkeys
+   p) Enable PlayerCombat
+
+   UI and minimap setup:
+   q) Hide own NamePlate child
+   r) If MiniMapCamera exists and has MiniMap component:
+      - set target = player.transform
+   s) If MiniMapElementsCamera exists and has MiniMap component:
+      - set target = player.transform
+   t) If Canvas/TopMenu/Config has ConfigMenu:
+      - configMenu.player = player
+
+   Indicator setup:
+   u) Find child "Indicator"
+   v) If Renderer and mmarow texture exist:
+      - renderer.material.mainTexture = mmarow
+
+=====================================================
+Phase 7: Local vs Remote Player Runtime
+=====================================================
+
+19) Player prefab Start() runs on each client for each player instance.
+
+20) If photonView.isMine == true (local owned player):
+    a) Player._instance = this
+    b) SkillsUI.Instance.displayUnlockedSkills()
+    c) startHealthRegeneration()
+    d) startManaRegeneration()
+    e) Destroy(trailRenderer) if assigned
+
+21) If photonView.isMine == false (remote player replica):
+    a) Optional chat local system message about player entering
+    b) Destroy local-control components on remote object:
+       - ThirdPersonUserControl
+       - ThirdPersonCharacter
+       - Rigidbody
+       - NPCActivator component and NPCActivator child
+
+22) First local update (owner path):
+    a) RPC setNick sent to others buffered:
+       photonView.RPC("setNick", PhotonTargets.OthersBuffered, PhotonNetwork.player.NickName)
+    b) Initializes HP/XP/Mana UI bars in PlayerPanel
+
+23) Remote update path:
+    a) Uses interpolated position/rotation from OnPhotonSerializeView data
+
+=====================================================
+Phase 8: Online Gameplay Loop
+=====================================================
+
+24) Movement sync:
+    - Owner writes transform and animator state in OnPhotonSerializeView
+    - Remote clients read and interpolate
+
+25) Player input (owner only in practice):
+    - PlayerHotkeys handles:
+      * ESC config
+      * B bag
+      * C character panel
+      * T chat focus
+      * Q lumos
+      * E broom toggle
+      * 1/2/3 spell casting if target exists
+
+26) Spell casting:
+    - PlayerCombat.spellCast(index)
+    - Validates target exists and index in range
+    - SpellCast coroutine:
+      * mana/level checks
+      * disable UI skill slot
+      * consume mana
+      * trigger cast animation and cast bar
+      * spawn spell object via PhotonNetwork.Instantiate
+
+27) NPC activation behavior (current version):
+    - NPCActivator only enables/disables NPCs by trigger range
+    - It does NOT transfer ownership anymore
+    - NPC master-authority behavior remains in NPC.cs
+
+=====================================================
+Phase 9: Room/Connection Error Paths
+=====================================================
+
+28) If room creation fails:
+    -> OnPhotonCreateRoomFailed() logs reason
+
+29) If room join fails:
+    -> OnPhotonJoinRoomFailed() logs reason
+
+30) If connection fails:
+    -> OnFailedToConnectToPhoton(object parameters)
+
+31) If disconnected later:
+    -> OnDisconnectedFromPhoton()
+
+=====================================================
+Current Architecture Notes (Important)
+=====================================================
+
+A) Current online flow is now:
+   ConnectUsingSettings -> OnJoinedLobby -> LoadLevel("Hogwarts") + JoinRandomRoom -> OnJoinedRoom -> spawnPlayer
+
+B) CreatePanel now auto-connects after character creation.
+   It does not return to MainPanel first.
+
+C) Scene-loaded callback in NetworkManager.Start() has offline-oriented behavior.
+   In strict online testing, keep useOffline disabled to avoid accidental JoinRandomRoom from that callback.
+
+D) NetworkManager has periodic Update() debug checks every 2s for __player/main camera.
+   This is currently active and may spam logs in long tests.
+
+===============================================
+END OF ONLINE FLOW (CURRENT CODE ALIGNED)
+===============================================

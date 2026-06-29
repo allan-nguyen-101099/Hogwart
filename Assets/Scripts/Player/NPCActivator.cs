@@ -14,11 +14,7 @@ public class NPCActivator : MonoBehaviour
             return;
         }
 
-        // get the ownership so NPC can move
-        if (col.gameObject.GetComponent<PhotonView>().owner == null) {
-            col.gameObject.GetComponent<PhotonView>().TransferOwnership(PhotonNetwork.player);
-        }
-
+        // Just enable the NPC. Master client owns all NPC logic.
         col.gameObject.GetComponent<NPC>().setEnabled(true);
     }
 
@@ -28,10 +24,7 @@ public class NPCActivator : MonoBehaviour
             return;
         }
 
-        if (col.gameObject.GetComponent<PhotonView>().isMine) {
-            col.gameObject.GetComponent<PhotonView>().TransferOwnership(PhotonNetwork.masterClient);
-        }
-
+        // Disable NPC when player leaves range
         col.gameObject.GetComponent<NPC>().setEnabled(false);
     }
 }

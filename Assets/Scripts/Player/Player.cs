@@ -674,10 +674,10 @@ public class Player : Photon.MonoBehaviour {
 
     // Has killed someone/NPC or made an assistance
     [PunRPC]
-    public void addKill(int id, Task.ActorType type, int level, int damage, int totalHealth, int expValue, int templateId = 0)
+    public void addKill(int id, Task.ActorType type, int npcLevel, int damage, int totalHealth, int expValue, int templateId = 0)
     {
         int wonExp = 0;
-        int levelDiff = level - level;
+        int levelDiff = npcLevel - level;
 
         // do not give exp if player has > 3 levels than the killed npc
         if (levelDiff > -2)

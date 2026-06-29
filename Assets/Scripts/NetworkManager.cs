@@ -18,7 +18,7 @@ public class NetworkManager : Photon.MonoBehaviour
     private float timer = 0f;
     void Start()
     {
-        // DontDestroyOnLoad(gameObject);
+        DontDestroyOnLoad(gameObject);
         Instance = this;
         Debug.Log("NetworkManager initialized");
         
@@ -99,24 +99,18 @@ public class NetworkManager : Photon.MonoBehaviour
         // var firstJoin = GameObject.Find("SpawnPoints/FirstJoin");//"FirstJoin"
         // var position = firstJoin.transform.position;//(633.51, 161.38, 415.70)
 
-        Debug.Log("[NetworkManager.spawnPlayer()] ===== STARTING =====");
-        Debug.Log("spawnPlayer() called");
-        Debug.Log($"Offline Mode: {PhotonNetwork.offlineMode}");
+        Debug.Log("[NetworkManager.spawnPlayer()] Starting player spawn.");
         
         CharacterData character = Service.db.Select<CharacterData>("FROM characters").FirstOrDefault();
-        Debug.Log($"Character found: {(character != null ? character.name : "NULL")}");
 
         if (character == null)
         {
             Debug.LogError("No character data found! Cannot spawn player.");
             return;
         }
-
-        Debug.Log("[NetworkManager.spawnPlayer()] About to enter try block");
         
         try
         {
-            Debug.Log("[NetworkManager.spawnPlayer()] Inside try block, about to instantiate");
             GameObject player = PhotonNetwork.Instantiate(
                 "Characters/Player",
                 new(633.51f, 161.38f, 415.70f),
@@ -319,39 +313,19 @@ public class NetworkManager : Photon.MonoBehaviour
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"[NetworkManager] *** EXCEPTION CAUGHT IN spawnPlayer() ***");
-            Debug.LogError($"[NetworkManager] Exception Type: {ex.GetType().Name}");
-            Debug.LogError($"[NetworkManager] Exception Message: {ex.Message}");
-            Debug.LogError($"[NetworkManager] Full Stack Trace:\n{ex.StackTrace}");
-            Debug.LogError($"[NetworkManager] Environment Stack Trace:\n{System.Environment.StackTrace}");
-            
+            Debug.LogError($"[NetworkManager] EXCEPTION in spawnPlayer(): {ex.Message}\n{ex.StackTrace}");
             if (__player != null)
             {
-                Debug.LogError($"[NetworkManager] Destroying player due to exception!");
                 Destroy(__player);
                 __player = null;
             }
         }
-        
-        Debug.Log("[NetworkManager.spawnPlayer()] ===== COMPLETED =====");
-    }
-    
-    /*
-	void OnPhotonPlayerDisconnected(PhotonPlayer player)
-	{
-		chat.sendMessage(player.name + " left the game");
-	}
-
-	void OnPhotonPlayerConnect(PhotonPlayer player)
-	{
-		chat.sendMessage(player.name + " joined the game");
-	}*/
 
     void OnJoinedLobby()
     {
         Debug.LogWarning("OnJoinedLobby() called");
         PhotonNetwork.LoadLevel(Menu.defaultLevel);
-        // PhotonNetwork.JoinRandomRoom();
+        PhotonNetwork.JoinRandomRoom();
         //Menu.Instance.showPanel("LoadingPanel");
     }
     //private void OnLevelWasLoaded(int level)
@@ -366,17 +340,13 @@ public class NetworkManager : Photon.MonoBehaviour
     
     void OnPhotonJoinRandomFailed(object[] codeAndMsg)
     {
-        Debug.LogError("OnPhotonJoinRandomFailed called: " + codeAndMsg[0]);
+        Debug.LogError("OnPhotonJoinRandomFailed called. Creating new room. Error code: " + codeAndMsg[0]);
+        PhotonNetwork.CreateRoom(null);
     }
 
     void OnCreatedRoom()
     {
-        //OnJoinedRoom ();
-    }
-
-    void OnPhotonRandomJoinFailed()
-    {
-        PhotonNetwork.CreateRoom(null);
+        Debug.LogWarning("OnCreatedRoom() called");
     }
 
 

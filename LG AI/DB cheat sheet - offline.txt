@@ -1,0 +1,238 @@
+=========================================
+DB CHEAT SHEET - OFFLINE MODE
+=========================================
+Project: Open Hogwarts (Unity)
+DB engine: iBoxDB LocalServer (embedded local DB)
+Main setup file: Assets/Scripts/Util/Service.cs
+
+--------------------------------------------------
+1) DATABASE NAME / TYPE USED
+--------------------------------------------------
+- Type: Local embedded DB (iBoxDB)
+- Runtime handle: Service.db (DB.AutoBox)
+- Physical storage root:
+  - Unity Editor: DB.Root(Application.persistentDataPath)
+- This is NOT a remote server DB.
+
+--------------------------------------------------
+2) SETUP PROCESS (WITH SYNTAX)
+--------------------------------------------------
+A) Open DB and define schema (Service.cs)
+
+Syntax patterns:
+- server = new DB(3);  // Initialize iBoxDB engine with 3 worker threads
+- server.GetConfig().EnsureTable<Model>("table_name", "primaryKeyField");  // Create table with type mapping and primary key
+- server.GetConfig().EnsureIndex<Model>("table_name", isUnique, "fieldName");  // Create index on field for faster queries (isUnique=true prevents duplicates)
+- _db = server.Open();  // Open/activate the database connection
+
+Current table setup in code:
+- EnsureTable<CharacterData>("characters", "id")
+- EnsureIndex<CharacterData>("characters", true, "name")
+- EnsureTable<CharacterItem>("inventory", "item")
+- EnsureTable<Item>("item", "id")
+- EnsureTable<NPCData>("npc", "id")
+- EnsureTable<NPCTemplate>("npc_template", "id")
+- EnsureTable<WaypointData>("waypoint_data", "id")
+- EnsureIndex<WaypointData>("waypoint_data", false, "npc")
+- EnsureTable<Task>("tasks", "taskId")
+- EnsureIndex<Task>("tasks", false, "quest")
+
+B) Seed initial data when DB is empty
+- MainPanel/CreatePanel checks:
+  Service.db.SelectCount("FROM item") < 1
+- If true:
+  DBSetup.start()
+  -> insertItems()
+  -> insertTestItems()
+  -> insertNPCTemplates()
+  -> insertNPCs()
+
+--------------------------------------------------
+3) READ / QUERY PROCESS (WITH SYNTAX)
+--------------------------------------------------
+A) Select many rows
+Syntax:
+- Service.db.Select<T>("FROM table")  // Fetch all rows as enumerable
+- Service.db.Select<T>("FROM table WHERE field == ?", arg)  // Filter by single field using parameterized query
+- Service.db.Select<T>("FROM table WHERE a == ? & b == ?", arg1, arg2)  // Multiple AND conditions with parameters
+- Service.db.Select<T>("FROM table ORDER BY id asc")  // Sort results ascending by id
+- Service.db.Select<T>("FROM table limit 0,3")  // Paginate: skip 0 rows, fetch 3 rows
+
+Examples from project:
+- Service.db.Select<CharacterData>("FROM characters")
+- Service.db.Select<Task>("FROM tasks")
+- Service.db.Select<Item>("FROM item limit 0," + MAX_ITEMS)
+- Service.db.Select<WaypointData>("FROM waypoint_data WHERE npc == ? ORDER BY id asc", id)
+
+B) Select one by key
+Syntax:
+- Service.db.SelectKey<T>("table", key)  // Direct lookup by primary key (fastest query)
+
+Examples:
+- Service.db.SelectKey<Item>("item", id)
+- Service.db.SelectKey<NPCData>("npc", id)
+- Service.db.SelectKey<NPCTemplate>("npc_template", id)
+
+C) Select one by query helper
+Syntax:
+- Service.getOne<T>("FROM table WHERE ...", args)  // Convenience method that auto-limits to 1 result (internally appends " limit 0,1")
+
+Example:
+- Service.getOne<CharacterItem>("FROM inventory WHERE item == ?", id)
+
+D) Count rows
+Syntax:
+- Service.db.SelectCount("FROM table")  // Return total row count (used for seed checks)
+
+--------------------------------------------------
+4) WRITE PROCESS (WITH SYNTAX)
+--------------------------------------------------
+A) Insert
+Syntax:
+- Service.db.Insert("table", obj)  // Add new row; object's primary key field must be set or auto-generated
+
+Used by:
+- CharacterData.create()
+- CharacterItem.create()
+- ItemData.create()
+- NPCData.create()
+- NPCTemplate.create()
+- WaypointData.create()
+- Task.create()
+
+B) Update
+Syntax:
+- Service.db.Update("table", obj)  // Modify existing row by primary key; all fields of obj are persisted
+
+Used by:
+- CharacterData.save() (health, mana, exp, money, level, unlocks)
+- CharacterItem.save() (quantity, slot, position)
+- ItemData.save()
+- NPCData.save()
+- NPCTemplate.save()
+- WaypointData.save()
+- Task.save() (quest progress)
+
+C) Delete
+Syntax:
+- Service.db.Delete("table", key)  // Remove row by primary key value
+
+Used by:
+- MainPanel clearDatabase():
+  - Delete("characters", 1)
+  - Delete("tasks", task.taskId)
+  - Delete("inventory", item.item)
+- Quest completion:
+  - Delete("tasks", taskId)
+- CharacterItem.delete():
+  - Delete("inventory", this.item)
+- WaypointData.delete():
+  - Delete("waypoint_data", this.id)
+
+D) Generate id (special)
+Syntax:
+- Service.db.Id(1)  // Auto-generate next available id in sequence (used by waypoint auto-increment)
+
+Used by:
+- WaypointData.create() to assign waypoint id.
+
+--------------------------------------------------
+5) CLEAR / RESET PROCESS (WITH SYNTAX)
+--------------------------------------------------
+A) In-game reset (MainPanel -> New Game)
+Process:
+1. Service.db.Delete("characters", 1)
+2. foreach task in Service.db.Select<Task>("FROM tasks"):
+   Service.db.Delete("tasks", task.taskId)
+3. foreach item in Service.db.Select<CharacterItem>("FROM inventory"):
+   Service.db.Delete("inventory", item.item)
+
+B) Full reseed strategy
+- If item table count is 0, DBSetup.start() repopulates static baseline.
+
+--------------------------------------------------
+6) DATA TYPES (TABLES), PURPOSE, READ/WRITE/CLEAR
+--------------------------------------------------
+1) characters (CharacterData)
+Purpose:
+- Player identity and progression (name, level, health/mana, exp, money, unlocked spells)
+Read:
+- MainPanel/NetworkManager queries character list or first character
+Write:
+- create() on character creation
+- save() during gameplay stat changes
+Clear:
+- Delete("characters", 1) in New Game reset
+
+2) inventory (CharacterItem)
+Purpose:
+- Player-owned item stacks and equipment placement (quantity, slot, position)
+Read:
+- Inventory/CharacterPanel/PlayerEquipment queries by characterId, slot, position
+Write:
+- create() when obtaining new item
+- save() when moving/equipping/consuming
+Clear:
+- Delete("inventory", itemKey) loop in reset
+- auto-delete when quantity < 1 in CharacterItem.save()
+
+3) item (ItemData)
+Purpose:
+- Static item catalog (type, subtype, price, effects)
+Read:
+- Shop, tooltip, item lookup by id
+Write:
+- Seeded by DBSetup.insertItems()
+Clear:
+- Not usually cleared in New Game (baseline table)
+
+4) npc (NPCData)
+Purpose:
+- Runtime NPC definitions (level, hp, aggression, attack range/speed)
+Read:
+- NPC Start and behavior systems
+Write:
+- Seeded by DBSetup.insertNPCs(); save() available
+Clear:
+- Not cleared in New Game flow
+
+5) npc_template (NPCTemplate)
+Purpose:
+- Base archetypes used to spawn/fill NPC data
+Read:
+- NPCTemplate.get()/fillById()
+Write:
+- Seeded by DBSetup.insertNPCTemplates(); save() available
+Clear:
+- Not cleared in New Game flow
+
+6) waypoint_data (WaypointData)
+Purpose:
+- NPC patrol points per npc id
+Read:
+- NPCData.waypoints property query
+Write:
+- insertWaypointsTo(); Waypoint editor create/save/delete
+Clear:
+- can delete by id via WaypointData.delete()
+
+7) tasks (Task)
+Purpose:
+- Active quest task state/progress (currentQuantity, completion)
+Read:
+- QuestManager.Start() restore active tasks from DB
+Write:
+- addQuest() -> task.create()
+- sendAction() -> task.save()
+Clear:
+- completeQuest() deletes tasks for quest
+- New Game reset deletes all tasks
+
+--------------------------------------------------
+7) OFFLINE MODE SUMMARY
+--------------------------------------------------
+- Offline gameplay persistence is entirely local iBoxDB.
+- DB query language in this project uses:
+  FROM ... WHERE ... == ? with args
+- Main persistence cycle:
+  create -> save(update) -> query/select -> delete(reset/complete)

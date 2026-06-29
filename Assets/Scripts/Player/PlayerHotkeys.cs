@@ -13,7 +13,12 @@ public class PlayerHotkeys : MonoBehaviour
 
     private void Awake()
     {
-        Instance = this;
+        // Only set singleton for local owner to avoid remote player overwrites
+        var pv = GetComponent<PhotonView>();
+        if (pv != null && pv.isMine)
+        {
+            Instance = this;
+        }
     }
 
     private void Update()

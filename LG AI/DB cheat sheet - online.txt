@@ -1,0 +1,224 @@
+=========================================
+DB CHEAT SHEET - ONLINE MODE
+=========================================
+Project: Open Hogwarts (Unity + Photon PUN)
+
+IMPORTANT REALITY IN CURRENT CODEBASE:
+- There is NO separate remote "Photon database" for your game data.
+- Photon Cloud here is used as a real-time networking relay/session layer (rooms, RPC, synced objects).
+- Persistent gameplay data (character, inventory, quest tasks, etc.) still uses the SAME local iBoxDB (Service.db) per client.
+
+Think of online mode as:
+1) Persistent DB: local iBoxDB (same as offline)
+2) Realtime session state: Photon room/player/object state (in-memory network state)
+
+--------------------------------------------------
+1) DATABASE / DATASTORE TYPES USED ONLINE
+--------------------------------------------------
+A) Persistent datastore
+- iBoxDB local database via Service.db
+- Same tables as offline: characters, inventory, item, npc, npc_template, waypoint_data, tasks
+
+B) Realtime network datastore (NOT a persistent DB)
+- Photon player properties (CustomProperties)
+- Photon player nickname
+- Photon room membership
+- Photon-instantiated networked objects (players/spells/effects)
+- RPC payloads across clients
+
+--------------------------------------------------
+2) ONLINE SETUP PROCESS (WITH SYNTAX)
+--------------------------------------------------
+A) Prepare local persistent data (same as offline)
+- If first run:
+  if (Service.db.SelectCount("FROM item") < 1) DBSetup.start();
+- Character loaded/created in local DB
+
+B) Attach player metadata before connecting
+Syntax:
+- Hashtable h = new Hashtable(1);
+- h.Add("characterId", characterId);
+- PhotonNetwork.player.SetCustomProperties(h);
+- PhotonNetwork.player.NickName = name;
+
+Used in:
+- MainPanel.joinGame()
+- CreatePanel.createButton()
+
+C) Connect to Photon Cloud
+Syntax:
+- PhotonNetwork.ConnectUsingSettings(Menu.GAME_VERSION);
+
+Callbacks path:
+- OnJoinedLobby()
+  - PhotonNetwork.LoadLevel(Menu.defaultLevel);
+  - PhotonNetwork.JoinRandomRoom();
+- OnPhotonJoinRandomFailed(object[] codeAndMsg)
+  - PhotonNetwork.CreateRoom(null);
+- OnJoinedRoom()
+  - spawnPlayer();
+
+D) Spawn networked player object
+Syntax:
+- PhotonNetwork.Instantiate("Characters/Player", position, rotation, 0)
+
+--------------------------------------------------
+3) READ / QUERY PROCESS ONLINE (WITH SYNTAX)
+--------------------------------------------------
+A) Local persistent reads (same as offline)
+Examples:
+- Service.db.Select<CharacterData>("FROM characters")
+- Service.getOne<CharacterItem>("FROM inventory WHERE ...", args)
+
+B) Photon realtime reads
+1) Read player custom property
+Syntax:
+- PhotonNetwork.player.CustomProperties["characterId"]
+
+Used in inventory/equipment queries to filter local DB rows by current player id.
+
+2) Read ownership/session state
+Syntax examples:
+- photonView.isMine
+- photonView.owner
+
+3) Read streamed movement/anim data
+- OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+- stream.ReceiveNext() for remote data
+
+--------------------------------------------------
+4) WRITE PROCESS ONLINE (WITH SYNTAX)
+--------------------------------------------------
+A) Local persistent writes (same as offline)
+- Service.db.Insert(...)
+- Service.db.Update(...)
+- Service.db.Delete(...)
+
+B) Photon realtime writes
+1) Set player custom properties
+- PhotonNetwork.player.SetCustomProperties(h)
+
+2) Set nickname
+- PhotonNetwork.player.NickName = name
+
+3) Network object creation/destruction
+- PhotonNetwork.Instantiate(path, pos, rot, group)
+- PhotonNetwork.Destroy(gameObject)
+
+4) RPC messages/events
+Syntax:
+- photonView.RPC("methodName", PhotonTargets.X, args...)
+
+Project examples:
+- Chat message broadcast:
+  RPC("Msg", PhotonTargets.All, message)
+- Player display name sync:
+  RPC("setNick", PhotonTargets.OthersBuffered, nick)
+- Combat:
+  RPC("getDamage", targetOwner, damage, attackerViewId)
+  RPC("addKill", targetOwner, ...)
+
+5) Transform/anim streaming
+- stream.SendNext(value) inside OnPhotonSerializeView when stream.isWriting
+
+--------------------------------------------------
+5) CLEAR / RESET PROCESS ONLINE
+--------------------------------------------------
+A) Realtime network state clear (session-level)
+- Leave/disconnect:
+  PhotonNetwork.Disconnect();
+- Room objects are ephemeral (destroyed when leaving room/session lifecycle)
+- PhotonNetwork.Destroy(...) clears spawned network objects by owner authority rules
+
+B) Persistent data clear (still local DB)
+- Same New Game flow as offline:
+  Delete characters/tasks/inventory from Service.db
+
+C) What Photon does NOT clear for you
+- It does not manage your local iBoxDB persistence automatically.
+
+--------------------------------------------------
+6) ONLINE DATA TYPES + PURPOSE (READ/WRITE/CLEAR)
+--------------------------------------------------
+A) Persistent iBoxDB entities (same as offline)
+1) characters
+- Purpose: player stats/progression
+- Read: local queries
+- Write: create/save
+- Clear: New Game delete
+
+2) inventory
+- Purpose: owned items/equipment slots
+- Read: local queries (filtered by Photon characterId)
+- Write: create/save/delete
+- Clear: New Game delete or quantity-based delete
+
+3) item
+- Purpose: static item definitions
+- Read: shops/tooltips
+- Write: seed data
+- Clear: usually not cleared by New Game
+
+4) npc
+- Purpose: npc config data
+- Read: NPC initialization
+- Write: seed/editor save
+- Clear: not in New Game reset
+
+5) npc_template
+- Purpose: npc archetypes
+- Read: fillById()
+- Write: seed/editor save
+- Clear: not in New Game reset
+
+6) waypoint_data
+- Purpose: npc path points
+- Read: NPCData.waypoints
+- Write: create/save/delete
+- Clear: per-id deletes
+
+7) tasks
+- Purpose: active quest progress
+- Read: restore active quests
+- Write: create/save during quest actions
+- Clear: completeQuest + New Game reset
+
+B) Photon realtime data entities (session, non-persistent)
+1) Player CustomProperties (e.g., characterId)
+- Purpose: identify which character this network player represents
+- Read: PhotonNetwork.player.CustomProperties["characterId"]
+- Write: SetCustomProperties()
+- Clear: ends with session/disconnect (not persistent DB)
+
+2) NickName
+- Purpose: display/network player name
+- Read: PhotonNetwork.player.NickName, photonView.owner.NickName
+- Write: assign before connect/join
+- Clear: session-level
+
+3) Room membership
+- Purpose: group players into shared simulation
+- Read: callbacks OnJoinedRoom etc.
+- Write: JoinRandomRoom/CreateRoom
+- Clear: leave/disconnect
+
+4) Networked prefabs via PhotonNetwork.Instantiate
+- Purpose: synced players/spells/effects
+- Read: appears across clients with PhotonView ownership
+- Write: Instantiate
+- Clear: PhotonNetwork.Destroy or room/session end
+
+5) RPC payloads
+- Purpose: one-off/command state sync (chat, damage, kills, nick sync)
+- Read: [PunRPC] methods receiving args
+- Write: photonView.RPC(...)
+- Clear: transient message flow (buffering depends on target mode, e.g., OthersBuffered)
+
+--------------------------------------------------
+7) ONLINE MODE SUMMARY
+--------------------------------------------------
+- Online mode in current project is HYBRID:
+  - Persistence = local iBoxDB (per client machine)
+  - Multiplayer sync = Photon Cloud realtime state
+- There is no Photon SQL/Cloud Save/database integration in current scripts.
+- If you want true shared persistent online DB, you need an external backend (PlayFab/Firebase/custom API/etc.) and migrate character/inventory/task writes from local iBoxDB to backend calls.

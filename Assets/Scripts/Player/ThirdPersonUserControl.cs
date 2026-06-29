@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityStandardAssets.CrossPlatformInput;
 
 namespace UnityStandardAssets.Characters.ThirdPerson
 {
@@ -37,9 +36,9 @@ namespace UnityStandardAssets.Characters.ThirdPerson
         {
             if (Chat.Instance.isWritting) return;
 
-            // Try InputSystemAgent first, fall back to old Input system
+            // Keep jump input in a single input system for easier monitoring.
             if (!m_Jump)
-                m_Jump = InputSystemAgent.GetKeyDown("Space") || Input.GetKeyDown(KeyCode.Space);
+                m_Jump = InputSystemAgent.GetKeyDown("Space");
         }
 
 
@@ -51,11 +50,12 @@ namespace UnityStandardAssets.Characters.ThirdPerson
                 return;
             }
             
-            // Use old Input system for reliable WASD input
-            float h = Input.GetAxis("Horizontal");  // A/D
-            float v = Input.GetAxis("Vertical");    // W/S
+            // Use InputSystemAgent for WASD/left-stick movement.
+            Vector2 moveInput = InputSystemAgent.NormalMove;
+            float h = moveInput.x;  // A/D
+            float v = moveInput.y;  // W/S
             
-            var crouch = InputSystemAgent.GetKey("LCtrl") || Input.GetKey(KeyCode.LeftControl);
+            bool crouch = InputSystemAgent.GetKey("LCtrl");
             
             // calculate move direction to pass to character
             if (m_Cam != null)
@@ -71,7 +71,7 @@ namespace UnityStandardAssets.Characters.ThirdPerson
                 m_Move = v * Vector3.forward + h * Vector3.right;
             }
             // walk speed multiplier
-            if (InputSystemAgent.GetKey("LShift") || Input.GetKey(KeyCode.LeftShift)) 
+            if (InputSystemAgent.GetKey("LShift")) 
                 m_Move *= 0.5f;
 
             // pass all parameters to the character control script
