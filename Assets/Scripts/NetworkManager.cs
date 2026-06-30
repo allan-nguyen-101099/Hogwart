@@ -381,7 +381,8 @@ public class NetworkManager : Photon.MonoBehaviour
                 __player = null;
             }
         }
-
+    }
+    
     // Callback: called by Photon when client joins a lobby
     void OnJoinedLobby()
     {

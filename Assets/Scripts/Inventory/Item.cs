@@ -77,7 +77,7 @@ public class Item : ItemData
 			case Item.ItemType.Consumable:
 				switch(subType) {
 					case Item.ItemSubType.Health:
-						Player.Instance.health += health;
+						// Player.Instance.health += health;
 						characterItem.quantity--;
 					break;
 				}

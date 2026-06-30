@@ -17,7 +17,7 @@ public class PlayerCombat : MonoBehaviour {
 		// TMP TEMPORAL THIS SHOULD COME FROM DB
 		spellList.Add((Spell)Resources.Load("Spells/Fireball"));
 		spellList.Add((Spell)Resources.Load("Spells/Frostbolt"));
-		spellList.Add((Spell)Resources.Load("Spells/Area test"));
+		spellList.Add((Spell)Resources.Load("Spells/Expecto Patronum"));
 		
 		// Safely update UI if it exists
 		if (SkillsUI.Instance != null) {

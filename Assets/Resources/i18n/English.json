@@ -101,23 +101,23 @@
     },
     {
         "key": "QUEST_1_PRE",
-        "translation": "Welcome {{username}}! \nYour initiation into Hogwarts is to kill one of those horrible <npc id='11'>arañas</npc> that haunt the vicinity of the castle.\n Be careful and take your wand!"
+        "translation": "Welcome {{username}}! \nYour first mission is to kill a Spider!"
     },
     {
         "key": "QUEST_1_AFTER",
-        "translation": "Excellent! Next time you will have a reward."
+        "translation": "Excellent! Your reward is a new spell - Frost Ball. You can use it by pressing the 2 key."
     },
     {
         "key": "QUEST_2_TITLE",
-        "translation": "Cold winter"
+        "translation": "Get Acquainted!!"
     },
     {
         "key": "QUEST_2_PRE",
-        "translation": "{{username}}, we need to store firewood to keep all the fires burning during the winter. Go find and bring me a pair."
+        "translation": "{{username}}, please talk to the instructor next to me."
     },
     {
         "key": "QUEST_2_AFTER",
-        "translation": "You only brought this to me? ... Well ... It's something."
+        "translation": "Excellent. Your reward is a new spell - Expecto Patronum. You can use it by pressing the 3 key."
     },
     {
         "key": "RANDOM_STUDENT_PHRASE_1",

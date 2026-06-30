@@ -25,9 +25,10 @@ public class PlayerHotkeys : MonoBehaviour
     // Callback: called by Unity every frame (polls all hotkey presses)
     private void Update()
     {
-        if (Chat.Instance.isWritting) return;
+        bool isChatWriting = Chat.Instance != null && Chat.Instance.isWritting;
+        if (isChatWriting) return;
 
-        if (InputSystemAgent.Key["Esc"]?.wasPressedThisFrame??false) Menu.Instance.togglePanel("ConfigPanel");
+        // if (InputSystemAgent.Key["Esc"]?.wasPressedThisFrame??false) Menu.Instance.togglePanel("ConfigPanel");
         if (InputSystemAgent.GetKeyDown("F1"))
             GameObject.Find("Canvas/TopMenu/Config").GetComponent<ConfigMenu>().dev.SetActive(true);
         if (InputSystemAgent.GetKeyDown("F2"))
@@ -35,8 +36,11 @@ public class PlayerHotkeys : MonoBehaviour
             var now = DateTime.Now.ToString("_d-MMM-yyyy-HH-mm-ss-f");
             ScreenCapture.CaptureScreenshot("./Screenshots/" + string.Format("Screenshot{0}.png", now));
 
-            Chat.Instance.LocalMsg("<color=\"#e8bf00\">[Sistema]</color> Captura guardada como Screenshot" + now +
-                                   ".png");
+            if (Chat.Instance != null)
+            {
+                Chat.Instance.LocalMsg("<color=\"#e8bf00\">[Sistema]</color> Captura guardada como Screenshot" + now +
+                                       ".png");
+            }
         }
 
         // Display/hide the UI
@@ -44,7 +48,10 @@ public class PlayerHotkeys : MonoBehaviour
 
         if (InputSystemAgent.GetKeyDown("B")) Menu.Instance.togglePanel("BagPanel");
         if (InputSystemAgent.GetKeyDown("C")) Menu.Instance.togglePanel("CharacterPanel");
-        if (InputSystemAgent.GetKeyDown("T")) Chat.Instance.input2.ActivateInputField();
+        if (InputSystemAgent.GetKeyDown("T") && Chat.Instance != null && Chat.Instance.input2 != null)
+        {
+            Chat.Instance.input2.ActivateInputField();
+        }
 
         if (InputSystemAgent.GetKeyDown("Q")) toggleLight();
 

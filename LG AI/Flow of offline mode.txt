@@ -259,7 +259,7 @@ Phase 6: Player Component Initialization
     → Instance = this                     // PlayerCombat.Instance singleton
     → spellList.Add(Resources.Load("Spells/Fireball"))    // loads Fireball ScriptableObject
     → spellList.Add(Resources.Load("Spells/Frostbolt"))   // loads Frostbolt ScriptableObject
-    → spellList.Add(Resources.Load("Spells/Area test"))   // loads AoE spell ScriptableObject
+    → spellList.Add(Resources.Load("Spells/Expecto Patronum"))   // loads AoE spell ScriptableObject
     → SkillsUI.Instance.fillSlots()       // populates the spell bar UI with icons
 
 21. Player.Update() starts running every frame:

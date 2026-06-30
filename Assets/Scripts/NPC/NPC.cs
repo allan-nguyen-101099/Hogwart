@@ -477,7 +477,7 @@ public class NPC : Photon.MonoBehaviour
         }
 
         if (!data.isAggresive) {
-            QuestManager.Instance.sendAction(data.id, Task.ActorType.NPC, Task.ActionType.Talk, 0, data.template);
+            QuestManager.Instance.sendAction(data.id, Task.ActorType.NPC, Task.ActionType.Talk, 1, data.template);
         }
 
         try {

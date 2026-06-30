@@ -23,10 +23,39 @@ public class Menu : MonoBehaviour {
 		}
 	}
 
+	private void EnsureMenusInitialized()
+	{
+		if (Menus == null)
+		{
+			Menus = new List<GameObject>();
+		}
+
+		if (Menus.Count > 0)
+		{
+			return;
+		}
+
+		foreach (Transform child in transform)
+		{
+			if (child == null)
+			{
+				continue;
+			}
+
+			Menus.Add(child.gameObject);
+		}
+
+		if (Menus.Count == 0)
+		{
+			Debug.LogWarning("[Menu] Menus list is empty and no child panels were found. Assign Menus in Inspector.");
+		}
+	}
+
     // Callback: called by Unity once when this script instance is loaded (before Start)
     void Awake() {
         DontDestroyOnLoad(transform.gameObject);
         DontDestroyOnLoad(GameObject.Find("EventSystem"));
+		EnsureMenusInitialized();
 
         SceneManager.sceneLoaded += OnLevelFinishedLoading;
         _instance = this;
@@ -36,16 +65,30 @@ public class Menu : MonoBehaviour {
 
         switch (scene.name) {
 		    case "MainMenu": // Main
-			    showPanel("MainPanel");
+			    TryShowPanel("MainPanel");
 			    break;
 		    default:
-                showPanel("PlayerPanel");
-			    showPanel("ChatPanel", false);
-			    showPanel("TopMenu", false);
-			    showPanel("MiniMap", false);
+                TryShowPanel("PlayerPanel");
+			    TryShowPanel("ChatPanel", false);
+			    TryShowPanel("TopMenu", false);
+			    TryShowPanel("MiniMap", false);
                 // Canvas Scaler was making the bags and menus look broken
                 //gameObject.GetComponent<CanvasScaler>().enabled = false;
                 break;
+		}
+	}
+
+	private bool TryShowPanel(string name, bool hidePanels = true)
+	{
+		try
+		{
+			showPanel(name, hidePanels);
+			return true;
+		}
+		catch (UnityException ex)
+		{
+			Debug.LogWarning("[Menu] " + ex.Message);
+			return false;
 		}
 	}
 
@@ -54,6 +97,8 @@ public class Menu : MonoBehaviour {
 	}
 	
 	public GameObject showPanel (string name, bool hidePanels = true) {
+		EnsureMenusInitialized();
+
 		if (hidePanels) {
 			hideAllPanels ();
 		}
@@ -65,11 +110,21 @@ public class Menu : MonoBehaviour {
 	}
 
 	public GameObject getPanel (string name) {
+		EnsureMenusInitialized();
+
 		foreach (GameObject panel in Menus) {
-			if (panel.name == name) {
+			if (panel != null && panel.name == name) {
 				return panel;
 			}
 		}
+
+		GameObject fallbackPanel = GameObject.Find("Canvas/" + name);
+		if (fallbackPanel != null)
+		{
+			Menus.Add(fallbackPanel);
+			return fallbackPanel;
+		}
+
 		throw new UnityException ("UI Panel "+ name +" not found");
 	}
 	
@@ -80,8 +135,12 @@ public class Menu : MonoBehaviour {
 	}
 	
 	public void hideAllPanels() {
+		EnsureMenusInitialized();
+
 		foreach (GameObject panel in Menus) {
-			panel.SetActive(false);
+			if (panel != null) {
+				panel.SetActive(false);
+			}
 		}
 	}
 

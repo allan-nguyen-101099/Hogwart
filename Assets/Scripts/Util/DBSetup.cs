@@ -31,7 +31,7 @@ public class DBSetup : MonoBehaviour {
 		item = new ItemData ();
 		item.id = id++;
 		item.price = 40;
-		item.health = 20;
+		// item.health = 20;
 		item.type = Item.ItemType.Consumable;
 		item.subType = Item.ItemSubType.Health;
 		item.create ();
@@ -233,7 +233,7 @@ public class DBSetup : MonoBehaviour {
 
 		template = new NPCTemplate();
 		template.id = (int)NPCData.creatureTemplate.CastleSpider;
-		template.name = "Araña del castillo";
+		template.name = "Spider";
 		template.creatureRace = NPCData.creatureRace.Monster;
 		template.creatureSubRace = NPCData.creatureSubRace.Normal;
 		template.isAgressive = true;
@@ -257,14 +257,14 @@ public class DBSetup : MonoBehaviour {
 		int i = 1;
 
 		npc = NPCTemplate.fillById(NPCData.creatureTemplate.Human, 25);
-		npc.id = i++;
+		npc.id = i++; // 1
 		npc.name = "Mike Ghole";
 		npc.subRace = NPCData.creatureSubRace.Seller;
 		npc.create ();
 		// END -----------------
 
 		npc = NPCTemplate.fillById(NPCData.creatureTemplate.CastleSpider, 5);
-		npc.id = i++;
+		npc.id = i++; // 2
 		npc.create ();
 
         waypoints = new List<Vector3>();
@@ -276,42 +276,42 @@ public class DBSetup : MonoBehaviour {
         // END -----------------
 
         npc = NPCTemplate.fillById(NPCData.creatureTemplate.Human, 25);
-        npc.id = i++;
+        npc.id = i++; // 3
         npc.name = "Instructor";
         npc.subRace = NPCData.creatureSubRace.Quest;
         npc.create();
         // END -----------------
 
         npc = NPCTemplate.fillById(NPCData.creatureTemplate.Human, 40);
-        npc.id = i++;
+        npc.id = i++; // 4
         npc.name = "Hagrid";
         npc.subRace = NPCData.creatureSubRace.Quest;
         npc.create();
         // END -----------------
 
         npc = NPCTemplate.fillById(NPCData.creatureTemplate.Human, 40);
-        npc.id = i++;
+        npc.id = i++; // 5
         npc.name = "Estudiante";
         npc.subRace = NPCData.creatureSubRace.Talker;
         npc.create();
         // END -----------------
 
         npc = NPCTemplate.fillById(NPCData.creatureTemplate.Human, 40);
-        npc.id = i++;
+        npc.id = i++; // 6
         npc.name = "Estudiante";
         npc.subRace = NPCData.creatureSubRace.Talker;
         npc.create();
         // END -----------------
 
         npc = NPCTemplate.fillById(NPCData.creatureTemplate.Human, 40);
-        npc.id = i++;
+        npc.id = i++; // 7
         npc.name = "Estudiante";
         npc.subRace = NPCData.creatureSubRace.Talker;
         npc.create();
         // END -----------------
 
         npc = NPCTemplate.fillById(NPCData.creatureTemplate.Human, 40);
-        npc.id = i++;
+        npc.id = i++; // 8
         npc.name = "Estudiante";
         npc.subRace = NPCData.creatureSubRace.Normal;
         npc.create();
@@ -414,7 +414,7 @@ public class DBSetup : MonoBehaviour {
         quest.assigner = 4; // hagrid
         QuestManager.Instance.assignToNPC(quest);
         quest.loot.Add(3, 4); // id, quantity
-        quest.spellRewards.Add(2); // unlock Skill3 (Fire Ball) as reward
+        quest.spellRewards.Add(2); // unlock Skill3 (Expecto Patronum) as reward
 
         task = new Task();
         task.quest = quest.id;

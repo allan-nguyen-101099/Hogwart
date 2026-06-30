@@ -36,7 +36,7 @@ namespace UnityStandardAssets.Characters.ThirdPerson
         // Callback: called by Unity every frame (polls jump key input)
         private void Update()
         {
-            if (Chat.Instance.isWritting) return;
+            if (Chat.Instance != null && Chat.Instance.isWritting) return;
 
             // Keep jump input in a single input system for easier monitoring.
             if (!m_Jump)
@@ -47,7 +47,7 @@ namespace UnityStandardAssets.Characters.ThirdPerson
         // Callback: called by Unity every fixed physics timestep (reads WASD movement and passes to character motor)
         private void FixedUpdate()
         {
-            if (Chat.Instance.isWritting)
+            if (Chat.Instance != null && Chat.Instance.isWritting)
             {
                 return;
             }

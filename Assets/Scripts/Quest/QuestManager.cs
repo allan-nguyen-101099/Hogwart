@@ -40,6 +40,11 @@ public class QuestManager : MonoBehaviour
     }
 
     public void addQuest (Quest quest) {
+        if (quests.ContainsKey(quest.id)) {
+            PlayerPanel.Instance.showActiveQuests();
+            return;
+        }
+
         quests.Add(quest.id, quest);
 
         // save the new tasks on db

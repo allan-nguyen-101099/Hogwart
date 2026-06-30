@@ -46,24 +46,32 @@ public class MainPanel : MonoBehaviour {
 			{
 				NewGameButton = GameObject.Find("Canvas/MainPanel/LoginOptions/NewGameButton")?.GetComponent<Button>();
 			}
-			// if (NewGameButton != null)
-			// {
+			if (NewGameButton != null)
+			{
 				NewGameButton.onClick.RemoveAllListeners();
 				NewGameButton.onClick.AddListener(showNewGameConfirm);
 				NewGameButton.gameObject.SetActive(true);
-			// }
+			}
 			
-			#if UNITY_EDITOR
-			GameObject.Find ("Canvas/MainPanel/LoginOptions/TestButton").SetActive(true);
-			#endif
+			// #if UNITY_EDITOR
+			// GameObject.Find ("Canvas/MainPanel/LoginOptions/TestButton").SetActive(true);
+			// #endif
 
-			GameObject.Find ("Canvas/MainPanel/LoginOptions/CreateButton").SetActive(false);
+			var createButton = GameObject.Find("Canvas/MainPanel/LoginOptions/CreateButton");
+			if (createButton != null)
+			{
+				createButton.SetActive(false);
+			}
 		} else {
 			nickLabel.transform.gameObject.SetActive(false);
 			LevelLabel.transform.gameObject.SetActive(false);
 			JoinButton.transform.gameObject.SetActive(false);
 			if (NewGameButton != null) NewGameButton.gameObject.SetActive(false);
-			GameObject.Find ("Canvas/MainPanel/LoginOptions/TestButton").SetActive(false);
+			var testButton = GameObject.Find("Canvas/MainPanel/LoginOptions/TestButton");
+			if (testButton != null)
+			{
+				testButton.SetActive(false);
+			}
 		}
 		 
 	}
@@ -95,7 +103,7 @@ public class MainPanel : MonoBehaviour {
 		if (ConfirmationPanel.Instance != null)
 		{
 			ConfirmationPanel.Instance.Show(
-				"Start New Game?\n\nThis will delete your current character and all progress.",
+				"Start New Game?",
 				() => clearDatabase(),
 				() => { } // On cancel, do nothing
 			);

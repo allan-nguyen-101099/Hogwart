@@ -85,6 +85,12 @@ public class PlayerPanel : MonoBehaviour {
         GameObject questContainer;
         GameObject taskInst;
 
+        // Rebuild quest UI from source of truth to avoid duplicate visual entries.
+        for (int i = activeQuestsContainer.transform.childCount - 1; i >= 0; i--)
+        {
+            Destroy(activeQuestsContainer.transform.GetChild(i).gameObject);
+        }
+
         foreach (Quest quest in QuestManager.Instance.quests.Values)
         {
             questContainer = Instantiate(questPrefab) as GameObject;
