@@ -23,6 +23,7 @@ public class Menu : MonoBehaviour {
 		}
 	}
 
+    // Callback: called by Unity once when this script instance is loaded (before Start)
     void Awake() {
         DontDestroyOnLoad(transform.gameObject);
         DontDestroyOnLoad(GameObject.Find("EventSystem"));

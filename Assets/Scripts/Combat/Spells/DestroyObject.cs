@@ -18,7 +18,7 @@ public class DestroyObject : Photon.MonoBehaviour {
 			timeOut = ps.duration;
 		}
 
-		Invoke ("DestroyNow", timeOut);
+		Invoke("DestroyNow", timeOut);
 	}
 	
 	public void DestroyNow ()

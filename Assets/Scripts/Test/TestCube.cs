@@ -8,6 +8,7 @@ public class TestCube : MonoBehaviour {
 	public bool giveExp = false;
 	public bool giveMana = false;
 
+	// Callback: called by Unity every frame while another collider stays inside this trigger volume
 	void OnTriggerStay(Collider other) {
 		if (other.transform.tag != "Player") {
 			return;

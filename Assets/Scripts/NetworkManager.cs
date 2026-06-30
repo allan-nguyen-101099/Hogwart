@@ -19,6 +19,7 @@ public class NetworkManager : Photon.MonoBehaviour
     private bool _connectionRequested = false;
     private bool _lobbyFlowStarted = false;
     private bool _pendingSpawn = false;
+    // Callback: called by Unity once when this object first becomes active
     void Start()
     {
         DontDestroyOnLoad(gameObject);
@@ -38,24 +39,25 @@ public class NetworkManager : Photon.MonoBehaviour
 
             if (s.name == Menu.defaultLevel)
             {
-                Debug.LogWarning($"Hogwarts scene loaded. Checking if should auto-start...");
+                Debug.Log($"Hogwarts scene loaded. Checking if should auto-start...");
 
                 if (_pendingSpawn && PhotonNetwork.inRoom && __player == null)
                 {
-                    Debug.LogWarning("[NetworkManager] Scene ready and room joined. Spawning deferred player now.");
+                    Debug.Log("[NetworkManager] Scene ready and room joined. Spawning deferred player now.");
                     _pendingSpawn = false;
                     spawnPlayer();
                 }
 
                 if (useOffline && !PhotonNetwork.offlineMode && !PhotonNetwork.inRoom)
                 {
-                    Debug.LogWarning("Auto-starting offline connection...");
+                    Debug.Log("Auto-starting offline connection...");
                     startConnection();
                 }
             }
         };
     }
 
+    // Callback: called by Unity every frame
     void Update()
     {
         timer += Time.deltaTime;
@@ -65,10 +67,9 @@ public class NetworkManager : Photon.MonoBehaviour
 
             if (__player == null)
             {
-                // Only warn if we're actually in the game scene, not on main menu
                 if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == Menu.defaultLevel)
                 {
-                    Debug.LogWarning("[NetworkManager] __player is null! It was destroyed or cleared.");
+                    Debug.Log("[NetworkManager] __player is null! It was destroyed or cleared.");
                 }
                 return;
             }
@@ -85,18 +86,17 @@ public class NetworkManager : Photon.MonoBehaviour
         }
     }
 
-    public static void validateGameVersion()
-    {
-        // http://answers.unity3d.com/questions/792342/how-to-validate-ssl-certificates-when-using-httpwe.html
-        ServicePointManager.ServerCertificateValidationCallback = MyRemoteCertificateValidationCallback;
-        string latestVersion = (new System.Net.WebClient()).DownloadString("https://raw.githubusercontent.com/OpenHogwarts/hogwarts/master/latest_build.txt").Trim();
+    // public static void validateGameVersion()
+    // {
+    //     ServicePointManager.ServerCertificateValidationCallback = MyRemoteCertificateValidationCallback;
+    //     string latestVersion = (new System.Net.WebClient()).DownloadString("https://raw.githubusercontent.com/OpenHogwarts/hogwarts/master/latest_build.txt").Trim();
 
-        if (Menu.GAME_VERSION != latestVersion)
-        {
-            Application.Quit();
-            throw new System.Exception("Please download the latest build " + Menu.GAME_VERSION + " <-> " + latestVersion);
-        }
-    }
+    //     if (Menu.GAME_VERSION != latestVersion)
+    //     {
+    //         Application.Quit();
+    //         throw new System.Exception("Please download the latest build " + Menu.GAME_VERSION + " <-> " + latestVersion);
+    //     }
+    // }
 
     public void startConnection()
     {
@@ -105,14 +105,14 @@ public class NetworkManager : Photon.MonoBehaviour
             bool connectionStillActive = PhotonNetwork.connecting || PhotonNetwork.connected || PhotonNetwork.inRoom;
             if (!connectionStillActive)
             {
-                Debug.LogWarning("[NetworkManager] Clearing stale connection lock and retrying startConnection.");
+                Debug.Log("[NetworkManager] Clearing stale connection lock and retrying startConnection.");
                 _connectionRequested = false;
                 _lobbyFlowStarted = false;
                 _pendingSpawn = false;
             }
             else
             {
-            Debug.LogWarning("[NetworkManager] Connection already requested, ignoring duplicate startConnection call.");
+            Debug.Log("[NetworkManager] Connection already requested, ignoring duplicate startConnection call.");
             return;
             }
         }
@@ -121,7 +121,7 @@ public class NetworkManager : Photon.MonoBehaviour
 
         if (useOffline)
         {
-            if (PhotonNetwork.offlineMode && PhotonNetwork.inRoom) return;// Execute once.
+            if (PhotonNetwork.offlineMode && PhotonNetwork.inRoom) return;
             PhotonNetwork.offlineMode = true;
             OnJoinedLobby();
             return;
@@ -129,7 +129,7 @@ public class NetworkManager : Photon.MonoBehaviour
 
         if (PhotonNetwork.connected && !PhotonNetwork.connecting)
         {
-            Debug.LogWarning("[NetworkManager] Already connected to Photon. Continuing lobby flow.");
+            Debug.Log("[NetworkManager] Already connected to Photon. Continuing lobby flow.");
             OnJoinedLobby();
             return;
         }
@@ -145,9 +145,10 @@ public class NetworkManager : Photon.MonoBehaviour
 
     }
 
+    // Callback: called by Photon when client successfully connects to the Photon master server
     public void OnConnectedToMaster()
     {
-        Debug.LogWarning("[NetworkManager] OnConnectedToMaster() called.");
+        Debug.Log("[NetworkManager] OnConnectedToMaster() called.");
         if (!_connectionRequested)
         {
             return;
@@ -158,9 +159,6 @@ public class NetworkManager : Photon.MonoBehaviour
 
     public void spawnPlayer()
     {
-        // var firstJoin = GameObject.Find("SpawnPoints/FirstJoin");//"FirstJoin"
-        // var position = firstJoin.transform.position;//(633.51, 161.38, 415.70)
-
         Debug.Log("[NetworkManager.spawnPlayer()] Starting player spawn.");
         
         CharacterData character = Service.db.Select<CharacterData>("FROM characters").FirstOrDefault();
@@ -178,7 +176,7 @@ public class NetworkManager : Photon.MonoBehaviour
                 new(633.51f, 161.38f, 415.70f),
                 Quaternion.identity, 0);
 
-            Debug.LogWarning("[NetworkManager.spawnPlayer()] PhotonNetwork.Instantiate() returned");
+            Debug.Log("[NetworkManager.spawnPlayer()] PhotonNetwork.Instantiate() returned");
 
             if (player == null)
             {
@@ -186,31 +184,31 @@ public class NetworkManager : Photon.MonoBehaviour
                 return;
             }
 
-            Debug.LogWarning("[NetworkManager.spawnPlayer()] Player is not null");
+            Debug.Log("[NetworkManager.spawnPlayer()] Player is not null");
 
             __player = player;
-            Debug.LogWarning($"[NetworkManager] Player instantiated and stored. ID: {__player.GetInstanceID()}");
+            Debug.Log($"[NetworkManager] Player instantiated and stored. ID: {__player.GetInstanceID()}");
 
             // Disable TimedObjectDestruction if it's on the player or children
-            var timedDestruction = player.GetComponent<TimedObjectDestruction>();
-            if (timedDestruction != null)
-            {
-                timedDestruction.CancelInvoke();
-                Destroy(timedDestruction);
-                Debug.LogWarning("[NetworkManager] TimedObjectDestruction removed from player!");
-            }
+            // var timedDestruction = player.GetComponent<TimedObjectDestruction>();
+            // if (timedDestruction != null)
+            // {
+            //     timedDestruction.CancelInvoke();
+            //     Destroy(timedDestruction);
+            //     Debug.Log("[NetworkManager] TimedObjectDestruction removed from player!");
+            // }
 
-            // Also check children
-            var timedDestructions = player.GetComponentsInChildren<TimedObjectDestruction>();
-            foreach (var td in timedDestructions)
-            {
-                td.CancelInvoke();
-                Destroy(td);
-                Debug.LogWarning($"[NetworkManager] TimedObjectDestruction removed from child: {td.gameObject.name}");
-            }
+            // // Also check children
+            // var timedDestructions = player.GetComponentsInChildren<TimedObjectDestruction>();
+            // foreach (var td in timedDestructions)
+            // {
+            //     td.CancelInvoke();
+            //     Destroy(td);
+            //     Debug.Log($"[NetworkManager] TimedObjectDestruction removed from child: {td.gameObject.name}");
+            // }
 
             if (player != null){
-                Debug.LogWarning($"Player instantiated at position: {player.transform.position}");
+                Debug.Log($"Player instantiated at position: {player.transform.position}");
             }
 
             var playerComponent = player.GetComponent<Player>();
@@ -225,7 +223,7 @@ public class NetworkManager : Photon.MonoBehaviour
         var mainCamera = player.transform.Find("Main Camera");
         if (mainCamera == null)
         {
-            Debug.LogWarning("Main Camera not found as child of player, searching for any Camera component");
+            Debug.Log("Main Camera not found as child of player, searching for any Camera component");
             var cameraInPlayer = player.GetComponentInChildren<Camera>();
             if (cameraInPlayer != null)
             {
@@ -243,8 +241,8 @@ public class NetworkManager : Photon.MonoBehaviour
             if (cameraComponent != null)
             {
                 cameraComponent.enabled = true;
-                Debug.LogWarning($"Camera component enabled. Active: {cameraComponent.isActiveAndEnabled}, Near clip: {cameraComponent.nearClipPlane}, Far clip: {cameraComponent.farClipPlane}, Tag: {mainCamera.gameObject.tag}");
-                Debug.LogWarning($"Camera render flags: {cameraComponent.clearFlags}, Culling mask: {cameraComponent.cullingMask}");
+                Debug.Log($"Camera component enabled. Active: {cameraComponent.isActiveAndEnabled}, Near clip: {cameraComponent.nearClipPlane}, Far clip: {cameraComponent.farClipPlane}, Tag: {mainCamera.gameObject.tag}");
+                Debug.Log($"Camera render flags: {cameraComponent.clearFlags}, Culling mask: {cameraComponent.cullingMask}");
             }
             else
             {
@@ -256,7 +254,6 @@ public class NetworkManager : Photon.MonoBehaviour
             {
                 cameraController.cameraTarget = player.transform;
                 
-                // Fix: If desiredDistance is 0, set it to 6 so camera is not inside player
                 if (cameraController.desiredDistance <= 0)
                 {
                     cameraController.desiredDistance = 6;
@@ -265,12 +262,11 @@ public class NetworkManager : Photon.MonoBehaviour
                 
                 Debug.Log($"Camera target set to player. Player pos: {player.transform.position}");
                 
-                // Force camera to update
                 cameraController.enabled = true;
             }
             else
             {
-                Debug.LogWarning("CameraController not found on Main Camera");
+                Debug.Log("CameraController not found on Main Camera");
             }
             
             mainCamera.gameObject.SetActive(true);
@@ -281,7 +277,6 @@ public class NetworkManager : Photon.MonoBehaviour
             Debug.LogError("Could not find camera on player!");
         }
 
-        // Enable components with null checks
         var thirdPersonControl = player.GetComponent<UnityStandardAssets.Characters.ThirdPerson.ThirdPersonUserControl>();
         if (thirdPersonControl != null)
         {
@@ -290,7 +285,7 @@ public class NetworkManager : Photon.MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("[NetworkManager] ThirdPersonUserControl component not found on player!");
+            Debug.Log("[NetworkManager] ThirdPersonUserControl component not found on player!");
         }
 
         var thirdPersonChar = player.GetComponent<UnityStandardAssets.Characters.ThirdPerson.ThirdPersonCharacter>();
@@ -301,7 +296,7 @@ public class NetworkManager : Photon.MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("[NetworkManager] ThirdPersonCharacter component not found on player!");
+            Debug.Log("[NetworkManager] ThirdPersonCharacter component not found on player!");
         }
 
         var playerHotkeys = player.GetComponent<PlayerHotkeys>();
@@ -312,7 +307,7 @@ public class NetworkManager : Photon.MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("[NetworkManager] PlayerHotkeys component not found on player!");
+            Debug.Log("[NetworkManager] PlayerHotkeys component not found on player!");
         }
 
         var playerCombat = player.GetComponent<PlayerCombat>();
@@ -323,32 +318,13 @@ public class NetworkManager : Photon.MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("[NetworkManager] PlayerCombat component not found on player!");
+            Debug.Log("[NetworkManager] PlayerCombat component not found on player!");
         }
         player.transform.Find("NamePlate").gameObject.SetActive(false);
 
-        // Local player should not render world-space helper UI panel.
-        // var helperPanel = player.transform.Find("Panel");
-        // if (helperPanel != null)
-        // {
-        //     helperPanel.gameObject.SetActive(false);
-        // }
-
-        // // Hide debug/selection plane under the local player.
-        // var pickedView = player.transform.Find("pickedView");
-        // if (pickedView != null)
-        // {
-        //     var pickedRenderer = pickedView.GetComponent<Renderer>();
-        //     if (pickedRenderer != null)
-        //     {
-        //         pickedRenderer.enabled = false;
-        //     }
-        //     pickedView.gameObject.SetActive(false);
-        // }
-
         DisableProblemRenderers(player);
 
-        // Set minimap target (with null checks)
+        // Set minimap target 
         var miniMapCamera = GameObject.Find("MiniMapCamera");
         if (miniMapCamera != null)
         {
@@ -373,7 +349,6 @@ public class NetworkManager : Photon.MonoBehaviour
         var configMenu = configObj?.GetComponent<ConfigMenu>();
         if (configMenu is { }) configMenu.player = player;
 
-        // Set indicator texture with null checks
         var indicator = player.transform.Find("Indicator");
         if (indicator != null)
         {
@@ -386,15 +361,15 @@ public class NetworkManager : Photon.MonoBehaviour
             else
             {
                 indicator.gameObject.SetActive(false);
-                Debug.LogWarning("[NetworkManager] Renderer component or mmarow texture is null. Indicator disabled.");
+                Debug.Log("[NetworkManager] Renderer component or mmarow texture is null. Indicator disabled.");
             }
         }
         else
         {
-            Debug.LogWarning("[NetworkManager] Indicator child object not found!");
+            Debug.Log("[NetworkManager] Indicator child object not found!");
         }
         
-        Debug.LogWarning("[NetworkManager] spawnPlayer() completed successfully");
+        Debug.Log("[NetworkManager] spawnPlayer() completed successfully");
         Debug.Log("[NetworkManager.spawnPlayer()] About to exit try block - NO EXCEPTION");
         }
         catch (System.Exception ex)
@@ -407,13 +382,14 @@ public class NetworkManager : Photon.MonoBehaviour
             }
         }
 
+    // Callback: called by Photon when client joins a lobby
     void OnJoinedLobby()
     {
-        Debug.LogWarning("OnJoinedLobby() called");
+        Debug.Log("OnJoinedLobby() called");
 
         if (_lobbyFlowStarted)
         {
-            Debug.LogWarning("[NetworkManager] Lobby flow already started, ignoring duplicate OnJoinedLobby.");
+            Debug.Log("[NetworkManager] Lobby flow already started, ignoring duplicate OnJoinedLobby.");
             return;
         }
 
@@ -424,25 +400,22 @@ public class NetworkManager : Photon.MonoBehaviour
         {
             PhotonNetwork.JoinRandomRoom();
         }
-        //Menu.Instance.showPanel("LoadingPanel");
     }
-    //private void OnLevelWasLoaded(int level)
-    //{
-    //    spawnPlayer();
-    //}
+
+    // Callback: called by Photon when client successfully joins a room
     void OnJoinedRoom()
     {
-        Debug.LogWarning("OnJoinedRoom() called - about to spawn player");
+        Debug.Log("OnJoinedRoom() called - about to spawn player");
         if (__player != null)
         {
-            Debug.LogWarning("[NetworkManager] __player already exists. Skipping duplicate spawn.");
+            Debug.Log("[NetworkManager] __player already exists. Skipping duplicate spawn.");
             return;
         }
 
         if (SceneManager.GetActiveScene().name != Menu.defaultLevel)
         {
             _pendingSpawn = true;
-            Debug.LogWarning("[NetworkManager] Joined room before scene load finished. Deferring spawn.");
+            Debug.Log("[NetworkManager] Joined room before scene load finished. Deferring spawn.");
             return;
         }
 
@@ -455,12 +428,14 @@ public class NetworkManager : Photon.MonoBehaviour
         PhotonNetwork.CreateRoom(null);
     }
 
+    // Callback: called by Photon when a new room is successfully created
     void OnCreatedRoom()
     {
-        Debug.LogWarning("OnCreatedRoom() called");
+        Debug.Log("OnCreatedRoom() called");
     }
 
 
+    // Callback: called by Photon when room creation fails
     public void OnPhotonCreateRoomFailed()
     {
         _connectionRequested = false;
@@ -469,6 +444,7 @@ public class NetworkManager : Photon.MonoBehaviour
         Debug.Log("OnPhotonCreateRoomFailed got called. This can happen if the room exists (even if not visible). Try another room name.");
     }
 
+    // Callback: called by Photon when joining a room fails
     public void OnPhotonJoinRoomFailed()
     {
         _connectionRequested = false;
@@ -477,6 +453,7 @@ public class NetworkManager : Photon.MonoBehaviour
         Debug.Log("OnPhotonJoinRoomFailed got called. This can happen if the room is not existing or full or closed.");
     }
 
+    // Callback: called by Photon when the client disconnects from Photon
     public void OnDisconnectedFromPhoton()
     {
         _connectionRequested = false;
@@ -486,6 +463,7 @@ public class NetworkManager : Photon.MonoBehaviour
         Debug.Log("Disconnected from Photon.");
     }
 
+    // Callback: called by Photon when the initial connection to Photon fails
     public void OnFailedToConnectToPhoton(object parameters)
     {
         _connectionRequested = false;
@@ -494,30 +472,30 @@ public class NetworkManager : Photon.MonoBehaviour
         Debug.Log("OnFailedToConnectToPhoton. StatusCode: " + parameters + " ServerAddress: " + PhotonNetwork.networkingPeer.ServerAddress);
     }
 
-    public static bool MyRemoteCertificateValidationCallback(System.Object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-    {
-        bool isOk = true;
-        // If there are errors in the certificate chain, look at each error to determine the cause.
-        if (sslPolicyErrors != SslPolicyErrors.None)
-        {
-            for (int i = 0; i < chain.ChainStatus.Length; i++)
-            {
-                if (chain.ChainStatus[i].Status != X509ChainStatusFlags.RevocationStatusUnknown)
-                {
-                    chain.ChainPolicy.RevocationFlag = X509RevocationFlag.EntireChain;
-                    chain.ChainPolicy.RevocationMode = X509RevocationMode.Online;
-                    chain.ChainPolicy.UrlRetrievalTimeout = new System.TimeSpan(0, 1, 0);
-                    chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllFlags;
-                    bool chainIsValid = chain.Build((X509Certificate2)certificate);
-                    if (!chainIsValid)
-                    {
-                        isOk = false;
-                    }
-                }
-            }
-        }
-        return isOk;
-    }
+    // public static bool MyRemoteCertificateValidationCallback(System.Object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+    // {
+    //     bool isOk = true;
+    //     // If there are errors in the certificate chain, look at each error to determine the cause.
+    //     if (sslPolicyErrors != SslPolicyErrors.None)
+    //     {
+    //         for (int i = 0; i < chain.ChainStatus.Length; i++)
+    //         {
+    //             if (chain.ChainStatus[i].Status != X509ChainStatusFlags.RevocationStatusUnknown)
+    //             {
+    //                 chain.ChainPolicy.RevocationFlag = X509RevocationFlag.EntireChain;
+    //                 chain.ChainPolicy.RevocationMode = X509RevocationMode.Online;
+    //                 chain.ChainPolicy.UrlRetrievalTimeout = new System.TimeSpan(0, 1, 0);
+    //                 chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllFlags;
+    //                 bool chainIsValid = chain.Build((X509Certificate2)certificate);
+    //                 if (!chainIsValid)
+    //                 {
+    //                     isOk = false;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return isOk;
+    // }
 
     private static void DisableProblemRenderers(GameObject player)
     {

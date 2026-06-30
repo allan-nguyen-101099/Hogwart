@@ -5,6 +5,7 @@ public class NPCManager : MonoBehaviour {
 
     public static NPCManager Instance;
 
+	// Callback: called by Unity once when this object first becomes active
 	public void Start () {
         Instance = this;
     }

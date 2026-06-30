@@ -24,6 +24,7 @@ public class Inventory : MonoBehaviour {
         }
     }
 
+    // Callback: called by Unity when this inventory panel is shown/enabled
     void OnEnable() {
         _instance = this;
 
@@ -36,7 +37,6 @@ public class Inventory : MonoBehaviour {
         x = -110;
         y = 110;
 
-        // remove old items
         destroyOldIcons();
 
         int slotNum = 1; // new items have pos 0
@@ -49,7 +49,6 @@ public class Inventory : MonoBehaviour {
                 slot.GetComponent<RectTransform>().localPosition = new Vector3(x, y, 0);
                 slot.GetComponent<Slot>().num = slotNum;
 
-                // check if we can fill this slot
                 fillSlot(slot.GetComponent<Slot>());
 
                 if (slotWidth == 0) {
@@ -78,12 +77,6 @@ public class Inventory : MonoBehaviour {
         children.ForEach(child => Destroy(child));
     }
 
-    /**
-		Tries to fill the given slot
-		@param Slot slot slot to fill
-		
-		@return void
-	 */
     void fillSlot(Slot slot) {
 
         bool isAssigned = false;
@@ -160,10 +153,6 @@ public class Inventory : MonoBehaviour {
         }
     }
 
-    /**
-		hides the options menu
-		@return void
-	*/
     public void hideOptions() {
         optionsPanel.SetActive(false);
     }

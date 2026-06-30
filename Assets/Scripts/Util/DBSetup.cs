@@ -351,7 +351,7 @@ public class DBSetup : MonoBehaviour {
         npc.create();
     }
 
-    public static string getTalkerPhrase (int npcId) {
+    public static string getTalkerPhrase(int npcId) {
         switch (npcId) {
             case 5: // regular student
                 return LanguageManager.get("RANDOM_STUDENT_PHRASE_1");
@@ -414,15 +414,16 @@ public class DBSetup : MonoBehaviour {
         quest.assigner = 4; // hagrid
         QuestManager.Instance.assignToNPC(quest);
         quest.loot.Add(3, 4); // id, quantity
+        quest.spellRewards.Add(2); // unlock Skill3 (Fire Ball) as reward
 
         task = new Task();
         task.quest = quest.id;
         task.taskId = taskId++;
-        task.id = 26;
+        task.id = 3;
         task.idType = Task.IdType.Id;
-        task.quantity = 8;
-        task.type = Task.ActorType.Item;
-        task.action = Task.ActionType.GetItem;
+        task.quantity = 1;
+        task.type = Task.ActorType.NPC;
+        task.action = Task.ActionType.Talk;
 
         quest.tasks.Add(task.taskId, task);
 
@@ -430,7 +431,7 @@ public class DBSetup : MonoBehaviour {
         // -- end quest
     }
 
-    public static void insertWaypointsTo (int id, List<Vector3> waypoints) {
+    public static void insertWaypointsTo(int id, List<Vector3> waypoints) {
 		WaypointData wp;
 
 		foreach (Vector3 waypoint in waypoints) {

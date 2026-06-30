@@ -27,6 +27,7 @@ public class CameraController : MonoBehaviour
     public int zoomRate = 30;
     public float cameraSmoothSpeed = 0.1f; // Add smoothing
 
+    // Callback: called by Unity once when this object first becomes active
     private void Start()
     {
         var angles = transform.eulerAngles;
@@ -38,16 +39,15 @@ public class CameraController : MonoBehaviour
         correctedDistance = distance;
     }
 
+    // Callback: called by Unity every frame after all Update calls (handles camera rotation, zoom, and collision)
     private void LateUpdate()
     {
-        // Skip if GamePanel is moving (for offline testing, this might not be initialized)
         try
         {
             if (GamePanel.isMovingAPanel) return;
         }
         catch { }
 
-        // Use built-in Input instead of InputSystemAgent
         if (Input.GetMouseButton(1)) // Right mouse button
         {
             float mouseX = Input.GetAxis("Mouse X") * mouseXSpeedMod;
@@ -117,6 +117,7 @@ public class CameraController : MonoBehaviour
         return Mathf.Clamp(angle, min, max);
     }
 
+    // Callback: called by Unity when the camera enters a wall/obstacle collider (triggers zoom-in)
     private void OnTriggerEnter(Collider col)
     {
         if (!col.isTrigger)
@@ -130,11 +131,13 @@ public class CameraController : MonoBehaviour
         }
     }
 
+    // Callback: called by Unity every frame while the camera stays inside a collider
     private void OnTriggerStay(Collider col)
     {
         if (!col.isTrigger) isHitting = true;
     }
 
+    // Callback: called by Unity when the camera exits a collider (resumes normal zoom behavior)
     private void OnTriggerExit(Collider col)
     {
         if (!col.isTrigger) isHitting = false;

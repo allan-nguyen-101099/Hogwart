@@ -1,33 +1,33 @@
 [MainPanel] Clearing all game data...
-UnityEngine.Debug:LogWarning (object)
+UnityEngine.Debug:Log (object)
 MainPanel:clearDatabase () (at Assets/Scripts/UI/Panels/MainPanel.cs:112)
 MainPanel:<showNewGameConfirm>b__8_0 () (at Assets/Scripts/UI/Panels/MainPanel.cs:98)
 ConfirmationPanel:OnConfirm () (at Assets/Scripts/UI/Panels/ConfirmationPanel.cs:63)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
 
 [MainPanel] Cleared table: characters
-UnityEngine.Debug:LogWarning (object)
+UnityEngine.Debug:Log (object)
 MainPanel:clearDatabase () (at Assets/Scripts/UI/Panels/MainPanel.cs:118)
 MainPanel:<showNewGameConfirm>b__8_0 () (at Assets/Scripts/UI/Panels/MainPanel.cs:98)
 ConfirmationPanel:OnConfirm () (at Assets/Scripts/UI/Panels/ConfirmationPanel.cs:63)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
 
 [MainPanel] Cleared table: tasks
-UnityEngine.Debug:LogWarning (object)
+UnityEngine.Debug:Log (object)
 MainPanel:clearDatabase () (at Assets/Scripts/UI/Panels/MainPanel.cs:132)
 MainPanel:<showNewGameConfirm>b__8_0 () (at Assets/Scripts/UI/Panels/MainPanel.cs:98)
 ConfirmationPanel:OnConfirm () (at Assets/Scripts/UI/Panels/ConfirmationPanel.cs:63)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
 
 [MainPanel] Cleared table: inventory
-UnityEngine.Debug:LogWarning (object)
+UnityEngine.Debug:Log (object)
 MainPanel:clearDatabase () (at Assets/Scripts/UI/Panels/MainPanel.cs:146)
 MainPanel:<showNewGameConfirm>b__8_0 () (at Assets/Scripts/UI/Panels/MainPanel.cs:98)
 ConfirmationPanel:OnConfirm () (at Assets/Scripts/UI/Panels/ConfirmationPanel.cs:63)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@1.0.0/Runtime/EventSystem/EventSystem.cs:530)
 
 [MainPanel] Database cleared successfully!
-UnityEngine.Debug:LogWarning (object)
+UnityEngine.Debug:Log (object)
 MainPanel:clearDatabase () (at Assets/Scripts/UI/Panels/MainPanel.cs:153)
 MainPanel:<showNewGameConfirm>b__8_0 () (at Assets/Scripts/UI/Panels/MainPanel.cs:98)
 ConfirmationPanel:OnConfirm () (at Assets/Scripts/UI/Panels/ConfirmationPanel.cs:63)

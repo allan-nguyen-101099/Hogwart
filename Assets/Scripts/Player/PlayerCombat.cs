@@ -10,6 +10,7 @@ public class PlayerCombat : MonoBehaviour {
 	
 	public List<Spell> spellList = new List<Spell> ();
 
+	// Callback: called by Unity once when this object first becomes active
 	void Start () {
 		Instance = this;
 
@@ -22,17 +23,17 @@ public class PlayerCombat : MonoBehaviour {
 		if (SkillsUI.Instance != null) {
 			SkillsUI.Instance.fillSlots();
 		} else {
-			Debug.LogWarning("SkillsUI.Instance not found during PlayerCombat initialization");
+			Debug.Log("SkillsUI.Instance not found during PlayerCombat initialization");
 		}
 	}
 
 	// for numeric hotkeys
 	public void spellCast(int key)
 	{
-		Debug.LogWarning($"[PlayerCombat.spellCast] Called with key index: {key}");
+		Debug.Log($"[PlayerCombat.spellCast] Called with key index: {key}");
 
 		if (!Player.Instance.characterData.isSpellUnlocked(key)) {
-			Debug.LogWarning($"[PlayerCombat.spellCast] Spell index {key} is locked.");
+			Debug.Log($"[PlayerCombat.spellCast] Spell index {key} is locked.");
 			return;
 		}
 		
@@ -47,15 +48,15 @@ public class PlayerCombat : MonoBehaviour {
 		}
 		
 		Spell spell = spellList[key];
-		Debug.LogWarning($"[PlayerCombat.spellCast] Spell: {spell.spellName}, Mana Cost: {spell.spellManaCost}, Min Level: {spell.minLevel}");
-		Debug.LogWarning($"[PlayerCombat.spellCast] Player Mana: {Player.Instance.mana}/{Player.Instance.maxMana}, Player Level: {Player.Instance.level}");
+		Debug.Log($"[PlayerCombat.spellCast] Spell: {spell.spellName}, Mana Cost: {spell.spellManaCost}, Min Level: {spell.minLevel}");
+		Debug.Log($"[PlayerCombat.spellCast] Player Mana: {Player.Instance.mana}/{Player.Instance.maxMana}, Player Level: {Player.Instance.level}");
 		
 		StartCoroutine(SpellCast(spellList[key], key));
 	}
 
 	public IEnumerator SpellCast(Spell spell, int uiPos)
 	{
-        Debug.LogWarning($"[PlayerCombat.SpellCast] Started casting {spell.spellName}");
+        Debug.Log($"[PlayerCombat.SpellCast] Started casting {spell.spellName}");
         
         if (spell.spellManaCost > Player.Instance.mana) {
             Debug.LogError($"[PlayerCombat.SpellCast] NOT ENOUGH MANA! Need: {spell.spellManaCost}, Have: {Player.Instance.mana}");
@@ -70,28 +71,28 @@ public class PlayerCombat : MonoBehaviour {
 		SkillsUI.Instance.disableSkill(uiPos);
 		castingSpell = true;
 		Player.Instance.mana -= spell.spellManaCost;
-        Debug.LogWarning($"[PlayerCombat.SpellCast] Mana deducted. New mana: {Player.Instance.mana}");
+        Debug.Log($"[PlayerCombat.SpellCast] Mana deducted. New mana: {Player.Instance.mana}");
 
 		// Wait for choosen spell cast time.
 		Player.Instance.anim.SetBool("InvokeSpell", true);
-        Debug.LogWarning($"[PlayerCombat.SpellCast] Anim InvokeSpell set to true, cast time: {spell.spellCastTime}");
+        Debug.Log($"[PlayerCombat.SpellCast] Anim InvokeSpell set to true, cast time: {spell.spellCastTime}");
         PlayerPanel.Instance.castingPanel.Cast(spell.spellName, spell.spellCastTime);
 		yield return new WaitForSeconds(spell.spellCastTime-spellAnimTime);
 
 		Player.Instance.anim.SetInteger("SpellType", 1);
 		Player.Instance.anim.SetBool("InvokeSpell", false);
-        Debug.LogWarning($"[PlayerCombat.SpellCast] Animation parameters updated");
+        Debug.Log($"[PlayerCombat.SpellCast] Animation parameters updated");
 
 		yield return new WaitForSeconds(spellAnimTime);
 
 		// Set up a spell and cast it.
 		SpellSetUp(spell);
-        Debug.LogWarning($"[PlayerCombat.SpellCast] SpellSetUp called for {spell.spellName}");
+        Debug.Log($"[PlayerCombat.SpellCast] SpellSetUp called for {spell.spellName}");
 
 		SkillsUI.Instance.enableSkill(uiPos);
 		
 		castingSpell = false;
-        Debug.LogWarning($"[PlayerCombat.SpellCast] SPELL CAST COMPLETE!");
+        Debug.Log($"[PlayerCombat.SpellCast] SPELL CAST COMPLETE!");
 	}
 
 	void SpellSetUp(Spell spell)
@@ -99,7 +100,7 @@ public class PlayerCombat : MonoBehaviour {
 		
 		if(spell.spellPrefab == null)
 		{
-			Debug.LogWarning("Spell prefab is null.Assign a spell prefab.");
+			Debug.Log("Spell prefab is null.Assign a spell prefab.");
 			return;
 			
 		}

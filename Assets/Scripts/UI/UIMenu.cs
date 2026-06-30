@@ -21,6 +21,7 @@ public class UIMenu : MonoBehaviour {
 		}
 	}
 	
+	// Callback: called by Unity once when this object first becomes active
 	public void Start () {
 		_instance = this;
 	}

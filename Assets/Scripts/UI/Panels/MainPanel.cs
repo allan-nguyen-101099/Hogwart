@@ -12,6 +12,7 @@ public class MainPanel : MonoBehaviour {
 
 	private int playerId;
 
+	// Callback: called by Unity when this panel is shown/enabled
 	public void OnEnable () {
         bool hasPlayer = false;
 
@@ -109,17 +110,17 @@ public class MainPanel : MonoBehaviour {
 	{
 		try
 		{
-			Debug.LogWarning("[MainPanel] Clearing all game data...");
+			Debug.Log("[MainPanel] Clearing all game data...");
 			
 			// Delete character by its actual key (id = 1)
 			try
 			{
 				Service.db.Delete("characters", 1);
-				Debug.LogWarning("[MainPanel] Cleared table: characters");
+				Debug.Log("[MainPanel] Cleared table: characters");
 			}
 			catch (System.Exception ex)
 			{
-				Debug.LogWarning($"[MainPanel] Could not clear table 'characters': {ex.Message}");
+				Debug.Log($"[MainPanel] Could not clear table 'characters': {ex.Message}");
 			}
 
 			// Delete all tasks by their actual taskId keys
@@ -129,11 +130,11 @@ public class MainPanel : MonoBehaviour {
 				{
 					Service.db.Delete("tasks", task.taskId);
 				}
-				Debug.LogWarning("[MainPanel] Cleared table: tasks");
+				Debug.Log("[MainPanel] Cleared table: tasks");
 			}
 			catch (System.Exception ex)
 			{
-				Debug.LogWarning($"[MainPanel] Could not clear table 'tasks': {ex.Message}");
+				Debug.Log($"[MainPanel] Could not clear table 'tasks': {ex.Message}");
 			}
 
 			// Delete all inventory items by their actual item keys
@@ -143,14 +144,14 @@ public class MainPanel : MonoBehaviour {
 				{
 					Service.db.Delete("inventory", item.item);
 				}
-				Debug.LogWarning("[MainPanel] Cleared table: inventory");
+				Debug.Log("[MainPanel] Cleared table: inventory");
 			}
 			catch (System.Exception ex)
 			{
-				Debug.LogWarning($"[MainPanel] Could not clear table 'inventory': {ex.Message}");
+				Debug.Log($"[MainPanel] Could not clear table 'inventory': {ex.Message}");
 			}
 			
-			Debug.LogWarning("[MainPanel] Database cleared successfully!");
+			Debug.Log("[MainPanel] Database cleared successfully!");
 			
 			// Navigate directly to character creation screen
 			Menu.Instance.showPanel("CreatePanel");

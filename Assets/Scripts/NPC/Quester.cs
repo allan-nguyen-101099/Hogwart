@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 public class Quester : NPC
 {
+    // Callback: called by NPC.OnMouseDown when player clicks this Quest NPC
     public override void OnClick()
     {
         List<int> questIds = QuestManager.Instance.getByNPC(Id);

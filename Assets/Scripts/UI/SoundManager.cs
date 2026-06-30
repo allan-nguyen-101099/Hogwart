@@ -11,6 +11,7 @@ public class SoundManager : MonoBehaviour {
 
 	public static SoundManager Instance;
 
+	// Callback: called by Unity once when this object first becomes active
 	public void Start () {
 		Instance = this;
 	}

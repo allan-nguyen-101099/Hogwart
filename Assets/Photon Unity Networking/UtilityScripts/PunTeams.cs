@@ -116,7 +116,7 @@ public static class TeamExtensions
     {
         if (!PhotonNetwork.connectedAndReady)
         {
-            Debug.LogWarning("JoinTeam was called in state: " + PhotonNetwork.connectionStateDetailed + ". Not connectedAndReady.");
+            Debug.Log("JoinTeam was called in state: " + PhotonNetwork.connectionStateDetailed + ". Not connectedAndReady.");
             return;
         }
 

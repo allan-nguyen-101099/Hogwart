@@ -7,9 +7,9 @@ public class SpellGUI : MonoBehaviour
     public bool showFireSpells;
     public bool showFrostSpells;
 
-    // So basic gui showing spells icons,infos,damages, etc... based on category.
     public List<Spell> spellList = new();
 
+    // Callback: called by Unity every frame
     private void Update()
     {
         if (InputSystemAgent.GetKeyDown("P"))

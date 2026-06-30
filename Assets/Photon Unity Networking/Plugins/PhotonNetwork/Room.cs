@@ -53,7 +53,7 @@ public class Room : RoomInfo
         {
             if (!this.Equals(PhotonNetwork.room))
             {
-                UnityEngine.Debug.LogWarning("Can't set open when not in that room.");
+                UnityEngine.Debug.Log("Can't set open when not in that room.");
             }
 
             if (value != this.openField && !PhotonNetwork.offlineMode)
@@ -81,7 +81,7 @@ public class Room : RoomInfo
         {
             if (!this.Equals(PhotonNetwork.room))
             {
-                UnityEngine.Debug.LogWarning("Can't set visible when not in that room.");
+                UnityEngine.Debug.Log("Can't set visible when not in that room.");
             }
 
             if (value != this.visibleField && !PhotonNetwork.offlineMode)
@@ -124,12 +124,12 @@ public class Room : RoomInfo
         {
             if (!this.Equals(PhotonNetwork.room))
             {
-                UnityEngine.Debug.LogWarning("Can't set MaxPlayers when not in that room.");
+                UnityEngine.Debug.Log("Can't set MaxPlayers when not in that room.");
             }
 
             if (value > 255)
             {
-                UnityEngine.Debug.LogWarning("Can't set Room.MaxPlayers to: " + value + ". Using max value: 255.");
+                UnityEngine.Debug.Log("Can't set Room.MaxPlayers to: " + value + ". Using max value: 255.");
                 value = 255;
             }
 
@@ -178,7 +178,7 @@ public class Room : RoomInfo
         {
             if (!this.Equals(PhotonNetwork.room))
             {
-                UnityEngine.Debug.LogWarning("Can't set PlayerTtl when not in a room.");
+                UnityEngine.Debug.Log("Can't set PlayerTtl when not in a room.");
             }
 
             if (value != this.playerTtlField && !PhotonNetwork.offlineMode)
@@ -198,7 +198,7 @@ public class Room : RoomInfo
         {
             if (!this.Equals(PhotonNetwork.room))
             {
-                UnityEngine.Debug.LogWarning("Can't set EmptyRoomTtl when not in a room.");
+                UnityEngine.Debug.Log("Can't set EmptyRoomTtl when not in a room.");
             }
 
             if (value != this.emptyRoomTtlField && !PhotonNetwork.offlineMode)

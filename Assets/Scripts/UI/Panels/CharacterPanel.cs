@@ -6,7 +6,7 @@ public class CharacterPanel : MonoBehaviour {
 
 	public GameObject itemSlotPrefab;
 
-	// Use this for initialization
+	// Callback: called by Unity when this panel is shown/enabled
 	void OnEnable () {
 		reload ();
 	}

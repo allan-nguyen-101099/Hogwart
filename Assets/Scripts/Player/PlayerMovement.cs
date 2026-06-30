@@ -13,6 +13,7 @@ public class PlayerMovement : MonoBehaviour
     private float groundCheckDistance = 0.1f;
     private LayerMask groundLayer;
 
+    // Callback: called by Unity once when this object first becomes active
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -31,6 +32,7 @@ public class PlayerMovement : MonoBehaviour
         groundLayer = LayerMask.GetMask("Default");
     }
 
+    // Callback: called by Unity every frame
     private void Update()
     {
         // Get WASD input
@@ -70,6 +72,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    // Callback: called by Unity every fixed physics timestep
     private void FixedUpdate()
     {
         if (rb == null) return;

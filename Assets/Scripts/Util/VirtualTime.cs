@@ -4,6 +4,7 @@ using System;
 
 public class VirtualTime : MonoBehaviour {
 
+	// Callback: called by Unity every frame
 	void Update () {
 		TimeSpan t = TimeSpan.FromSeconds( ((System.DateTime.Now.Minute*60)+System.DateTime.Now.Second)*24 );
 

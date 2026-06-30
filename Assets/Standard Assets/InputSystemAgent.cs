@@ -59,7 +59,7 @@ public class InputSystemAgent : MonoBehaviour
                         RegisterHandler(action, CreateValueEvent(_desiredDistance));
                         break;
                     default:
-                        Debug.LogWarning($"Unhandled Action {action.name}");
+                        Debug.Log($"Unhandled Action {action.name}");
                         break;
                 }
         }

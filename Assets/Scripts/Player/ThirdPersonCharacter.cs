@@ -33,6 +33,7 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 		Vector3 m_InputDirection; // Store input direction for strafing
 
 
+		// Callback: called by Unity once when this object first becomes active
 		void Start()
 		{
 			m_Animator = GetComponent<Animator>();
@@ -198,6 +199,7 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 		}
 
 
+		// Callback: called by Unity Animator each frame to override root motion with custom velocity
 		public void OnAnimatorMove()
 		{
 			// we implement this function to override the default root motion.

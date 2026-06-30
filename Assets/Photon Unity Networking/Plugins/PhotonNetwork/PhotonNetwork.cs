@@ -1088,7 +1088,7 @@ public static class PhotonNetwork
         PhotonHandler[] photonHandlers = GameObject.FindObjectsOfType(typeof(PhotonHandler)) as PhotonHandler[];
         if (photonHandlers != null && photonHandlers.Length > 0)
         {
-            Debug.LogWarning("Unity recompiled. Connection gets closed and replaced. You can connect as 'new' client.");
+            Debug.Log("Unity recompiled. Connection gets closed and replaced. You can connect as 'new' client.");
             foreach (PhotonHandler photonHandler in photonHandlers)
             {
                 //Debug.Log("Handler: " + photonHandler + " photonHandler.gameObject: " + photonHandler.gameObject);
@@ -1183,7 +1183,7 @@ public static class PhotonNetwork
     {
         if (networkingPeer.PeerState != PeerStateValue.Disconnected)
         {
-            Debug.LogWarning("ConnectUsingSettings() failed. Can only connect while in state 'Disconnected'. Current state: " + networkingPeer.PeerState);
+            Debug.Log("ConnectUsingSettings() failed. Can only connect while in state 'Disconnected'. Current state: " + networkingPeer.PeerState);
             return false;
         }
         if (PhotonServerSettings == null)
@@ -1222,7 +1222,7 @@ public static class PhotonNetwork
         if (offlineMode)
         {
             // someone can set offlineMode in code and then call ConnectUsingSettings() with non-offline settings. Warning for that case:
-            Debug.LogWarning("ConnectUsingSettings() disabled the offline mode. No longer offline.");
+            Debug.Log("ConnectUsingSettings() disabled the offline mode. No longer offline.");
         }
 
         offlineMode = false; // Cleanup offline mode
@@ -1265,20 +1265,20 @@ public static class PhotonNetwork
     {
         if (networkingPeer.PeerState != PeerStateValue.Disconnected)
         {
-            Debug.LogWarning("ConnectToMaster() failed. Can only connect while in state 'Disconnected'. Current state: " + networkingPeer.PeerState);
+            Debug.Log("ConnectToMaster() failed. Can only connect while in state 'Disconnected'. Current state: " + networkingPeer.PeerState);
             return false;
         }
 
         if (offlineMode)
         {
             offlineMode = false; // Cleanup offline mode
-            Debug.LogWarning("ConnectToMaster() disabled the offline mode. No longer offline.");
+            Debug.Log("ConnectToMaster() disabled the offline mode. No longer offline.");
         }
 
         if (!isMessageQueueRunning)
         {
             isMessageQueueRunning = true;
-            Debug.LogWarning("ConnectToMaster() enabled isMessageQueueRunning. Needs to be able to dispatch incoming messages.");
+            Debug.Log("ConnectToMaster() enabled isMessageQueueRunning. Needs to be able to dispatch incoming messages.");
         }
 
         networkingPeer.SetApp(appID, gameVersion);
@@ -1299,26 +1299,26 @@ public static class PhotonNetwork
     {
         if (string.IsNullOrEmpty(networkingPeer.MasterServerAddress))
         {
-            Debug.LogWarning("Reconnect() failed. It seems the client wasn't connected before?! Current state: " + networkingPeer.PeerState);
+            Debug.Log("Reconnect() failed. It seems the client wasn't connected before?! Current state: " + networkingPeer.PeerState);
             return false;
         }
 
         if (networkingPeer.PeerState != PeerStateValue.Disconnected)
         {
-            Debug.LogWarning("Reconnect() failed. Can only connect while in state 'Disconnected'. Current state: " + networkingPeer.PeerState);
+            Debug.Log("Reconnect() failed. Can only connect while in state 'Disconnected'. Current state: " + networkingPeer.PeerState);
             return false;
         }
 
         if (offlineMode)
         {
             offlineMode = false; // Cleanup offline mode
-            Debug.LogWarning("Reconnect() disabled the offline mode. No longer offline.");
+            Debug.Log("Reconnect() disabled the offline mode. No longer offline.");
         }
 
         if (!isMessageQueueRunning)
         {
             isMessageQueueRunning = true;
-            Debug.LogWarning("Reconnect() enabled isMessageQueueRunning. Needs to be able to dispatch incoming messages.");
+            Debug.Log("Reconnect() enabled isMessageQueueRunning. Needs to be able to dispatch incoming messages.");
         }
 
         networkingPeer.IsUsingNameServer = false;
@@ -1342,30 +1342,30 @@ public static class PhotonNetwork
     {
         if (networkingPeer.PeerState != PeerStateValue.Disconnected)
         {
-            Debug.LogWarning("ReconnectAndRejoin() failed. Can only connect while in state 'Disconnected'. Current state: " + networkingPeer.PeerState);
+            Debug.Log("ReconnectAndRejoin() failed. Can only connect while in state 'Disconnected'. Current state: " + networkingPeer.PeerState);
             return false;
         }
         if (offlineMode)
         {
             offlineMode = false; // Cleanup offline mode
-            Debug.LogWarning("ReconnectAndRejoin() disabled the offline mode. No longer offline.");
+            Debug.Log("ReconnectAndRejoin() disabled the offline mode. No longer offline.");
         }
 
         if (string.IsNullOrEmpty(networkingPeer.GameServerAddress))
         {
-            Debug.LogWarning("ReconnectAndRejoin() failed. It seems the client wasn't connected to a game server before (no address).");
+            Debug.Log("ReconnectAndRejoin() failed. It seems the client wasn't connected to a game server before (no address).");
             return false;
         }
         if (networkingPeer.enterRoomParamsCache == null)
         {
-            Debug.LogWarning("ReconnectAndRejoin() failed. It seems the client doesn't have any previous room to re-join.");
+            Debug.Log("ReconnectAndRejoin() failed. It seems the client doesn't have any previous room to re-join.");
             return false;
         }
 
         if (!isMessageQueueRunning)
         {
             isMessageQueueRunning = true;
-            Debug.LogWarning("ReconnectAndRejoin() enabled isMessageQueueRunning. Needs to be able to dispatch incoming messages.");
+            Debug.Log("ReconnectAndRejoin() enabled isMessageQueueRunning. Needs to be able to dispatch incoming messages.");
         }
 
         networkingPeer.IsUsingNameServer = false;
@@ -1399,7 +1399,7 @@ public static class PhotonNetwork
     {
         if (networkingPeer.PeerState != PeerStateValue.Disconnected)
         {
-            Debug.LogWarning("ConnectToBestCloudServer() failed. Can only connect while in state 'Disconnected'. Current state: " + networkingPeer.PeerState);
+            Debug.Log("ConnectToBestCloudServer() failed. Can only connect while in state 'Disconnected'. Current state: " + networkingPeer.PeerState);
             return false;
         }
 
@@ -1429,7 +1429,7 @@ public static class PhotonNetwork
     {
         if (networkingPeer.PeerState != PeerStateValue.Disconnected)
         {
-            Debug.LogWarning("ConnectToRegion() failed. Can only connect while in state 'Disconnected'. Current state: " + networkingPeer.PeerState);
+            Debug.Log("ConnectToRegion() failed. Can only connect while in state 'Disconnected'. Current state: " + networkingPeer.PeerState);
             return false;
         }
 
@@ -2136,7 +2136,7 @@ public static class PhotonNetwork
         {
             if (room == null)
             {
-                Debug.LogWarning("PhotonNetwork.room is null. You don't have to call LeaveRoom() when you're not in one. State: " + PhotonNetwork.connectionStateDetailed);
+                Debug.Log("PhotonNetwork.room is null. You don't have to call LeaveRoom() when you're not in one. State: " + PhotonNetwork.connectionStateDetailed);
             }
             else
             {
@@ -2293,7 +2293,7 @@ public static class PhotonNetwork
     {
         if (!inRoom || eventCode >= 200)
         {
-            Debug.LogWarning("RaiseEvent() failed. Your event is not being sent! Check if your are in a Room and the eventCode must be less than 200 (0..199).");
+            Debug.Log("RaiseEvent() failed. Your event is not being sent! Check if your are in a Room and the eventCode must be less than 200 (0..199).");
             return false;
         }
 
@@ -2305,7 +2305,7 @@ public static class PhotonNetwork
     {
         if (!inRoom || eventCode >= 200)
         {
-            Debug.LogWarning("RaiseEvent() failed. Your event is not being sent! Check if your are in a Room and the eventCode must be less than 200 (0..199).");
+            Debug.Log("RaiseEvent() failed. Your event is not being sent! Check if your are in a Room and the eventCode must be less than 200 (0..199).");
             return false;
         }
 
@@ -2418,7 +2418,7 @@ public static class PhotonNetwork
 
         if (networkingPeer.photonViewList.ContainsKey(viewID))
         {
-            Debug.LogWarning(string.Format("UnAllocateViewID() should be called after the PhotonView was destroyed (GameObject.Destroy()). ViewID: {0} still found in: {1}", viewID, networkingPeer.photonViewList[viewID]));
+            Debug.Log(string.Format("UnAllocateViewID() should be called after the PhotonView was destroyed (GameObject.Destroy()). ViewID: {0} still found in: {1}", viewID, networkingPeer.photonViewList[viewID]));
         }
     }
 
@@ -2905,7 +2905,7 @@ public static class PhotonNetwork
 
         if (room == null)
         {
-            Debug.LogWarning("RPCs can only be sent in rooms. Call of \"" + methodName + "\" gets executed locally only, if at all.");
+            Debug.Log("RPCs can only be sent in rooms. Call of \"" + methodName + "\" gets executed locally only, if at all.");
             return;
         }
 
@@ -2929,7 +2929,7 @@ public static class PhotonNetwork
         }
         else
         {
-            Debug.LogWarning("Could not execute RPC " + methodName + ". Possible scene loading in progress?");
+            Debug.Log("Could not execute RPC " + methodName + ". Possible scene loading in progress?");
         }
     }
 
@@ -2945,7 +2945,7 @@ public static class PhotonNetwork
 
         if (room == null)
         {
-            Debug.LogWarning("RPCs can only be sent in rooms. Call of \"" + methodName + "\" gets executed locally only, if at all.");
+            Debug.Log("RPCs can only be sent in rooms. Call of \"" + methodName + "\" gets executed locally only, if at all.");
             return;
         }
 
@@ -2960,7 +2960,7 @@ public static class PhotonNetwork
         }
         else
         {
-            Debug.LogWarning("Could not execute RPC " + methodName + ". Possible scene loading in progress?");
+            Debug.Log("Could not execute RPC " + methodName + ". Possible scene loading in progress?");
         }
     }
 

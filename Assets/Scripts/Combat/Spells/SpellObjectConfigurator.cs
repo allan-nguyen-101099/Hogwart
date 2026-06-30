@@ -7,6 +7,7 @@ public class SpellObjectConfigurator : Photon.MonoBehaviour {
 	public Spell spell = null;
 	public Transform myTarget = null;
 	
+	// Callback: called by Unity once when this object first becomes active
 	void Start()
 	{
 		if (!photonView.isMine) {
@@ -40,63 +41,34 @@ public class SpellObjectConfigurator : Photon.MonoBehaviour {
 					}
 				}
 			}
-
-			if(spell.spellType == Spell.SpellType.Aoe)
+			else if(spell.spellType == Spell.SpellType.Aoe)
 			{
 
 				Collider[] hitColliders = Physics.OverlapSphere(myTransform.position,5.0f);
 				
-				//for each collider in that radius will take damage
+				// for each collider in that radius will take damage
 				for(int i = 0; i < hitColliders.Length;i++)
 				{
 					if(hitColliders[i].tag == "NPC"){
 						PhotonNetwork.Instantiate("Particles/" + spell.spellCollisionParticle.name, hitColliders[i].transform.position, Quaternion.identity, 0);
-
-						//You can implement a your own damage script.This is an example.(col) means a player.
-						//PlayerDamageScript pds = col.gameObject.GetComponent<PlayerDamageScript>();
-						//pds.TakeDamage(); or pds.health -= damage;
 						hitColliders[i].gameObject.GetComponent<NPC>().getHit(Random.Range(spell.spellMinDamage,spell.spellMaxDamage), Player.Instance.gameObject);
-
-
 					}
 				}
-				//if spell type is aoe and spell flag is a damage over time
+				// spell type = aoe & spell flag = damage pers second
 				if(spell.spellFlag == Spell.SpellFlag.DamagePerSecond){
 
-					//for each collider in that radius will take damage
+					// for each collider in that radius will be affected by the dot effect
 					for(int i = 0; i < hitColliders.Length;i++)
 					{
 						if(hitColliders[i].tag == "NPC"){
 							NPC npc = hitColliders[i].gameObject.GetComponent<NPC>();
-							
-							if(npc && npc.check == false)
-								npc.StartCoroutine(npc.TakeDamageByFlagType(spell, Player.Instance.gameObject));
-							else{
-								npc.resetDps = true;
-								npc.StartCoroutine(npc.TakeDamageByFlagType(spell, Player.Instance.gameObject));
-							}
-						}
-					}
-
-				}
-
-				else if(spell.spellFlag == Spell.SpellFlag.Slow)
-				{
-					for(int i = 0; i < hitColliders.Length;i++)
-					{
-						if(hitColliders[i].tag == "NPC"){
-							NPC npc = hitColliders[i].gameObject.GetComponent<NPC>();
-
+							if(!(npc && npc.check == false)) npc.resetDps = true;
 							npc.StartCoroutine(npc.TakeDamageByFlagType(spell, Player.Instance.gameObject));
 						}
-
 					}
-
 				}
 			}
-
 		}
-
 	}
 	
 	void Update()
@@ -138,6 +110,7 @@ public class SpellObjectConfigurator : Photon.MonoBehaviour {
 											    5 * Time.deltaTime);
 	}
 	
+	// Callback: called by Unity when this spell projectile's collider hits another object
 	void OnCollisionEnter(Collision col)
 	{
 		if (!photonView.isMine) {
@@ -170,7 +143,7 @@ public class SpellObjectConfigurator : Photon.MonoBehaviour {
 				if(npc)
 					npc.StartCoroutine(npc.TakeDamageByFlagType(spell, Player.Instance.gameObject));
 				else
-					Debug.LogWarning("The DamageByFlag script not found in" + " " + col.gameObject.name + ".Please assign the DamageByFlag script.");
+					Debug.Log("The DamageByFlag script not found in" + " " + col.gameObject.name + ".Please assign the DamageByFlag script.");
 			}
 
 			col.gameObject.GetComponent<NPC>().getHit(Random.Range(spell.spellMinDamage,spell.spellMaxDamage), Player.Instance.gameObject);

@@ -309,7 +309,7 @@ namespace HighlightingSystem
 			if (highlighters.Length > 1 && highlighters[0] != this)
 			{
 				enabled = false;
-				Debug.LogWarning("HighlightingSystem : Multiple Highlighter components on a single GameObject is not allowed! Highlighter has been disabled on a GameObject with name '" + gameObject.name + "'.");
+				Debug.Log("HighlightingSystem : Multiple Highlighter components on a single GameObject is not allowed! Highlighter has been disabled on a GameObject with name '" + gameObject.name + "'.");
 				return false;
 			}
 			return true;

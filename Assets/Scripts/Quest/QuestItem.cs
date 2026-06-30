@@ -12,6 +12,7 @@ public class QuestItem : MonoBehaviour {
 
     private bool isHidden = false;
 
+    // Callback: called by Unity once when this object first becomes active
     public void Start ()
     {
         if (id < 1 || quantity < 1) {
@@ -19,6 +20,7 @@ public class QuestItem : MonoBehaviour {
         }
     }
 
+    // Callback: called by Unity when player clicks this quest item with the mouse
     public void OnMouseDown()
     {
         if (isHidden) {

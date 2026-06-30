@@ -160,7 +160,7 @@ public class PunTurnManager : PunBehaviour
     {
         if (IsFinishedByMe)
         {
-            UnityEngine.Debug.LogWarning("Can't SendMove. Turn is finished by this player.");
+            UnityEngine.Debug.Log("Can't SendMove. Turn is finished by this player.");
             return;
         }
 

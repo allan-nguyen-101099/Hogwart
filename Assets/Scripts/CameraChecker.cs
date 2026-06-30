@@ -12,11 +12,11 @@ public class CameraChecker : MonoBehaviour
     {
         if (cam == null)
         {
-            Debug.LogWarning("[CameraChecker] Attempted to set cached camera to null!");
+            Debug.Log("[CameraChecker] Attempted to set cached camera to null!");
             return;
         }
         else {
-            Debug.LogWarning($"[CameraChecker] Caching MainCamera: {cam.gameObject.name} at position {cam.transform.position}");
+            Debug.Log($"[CameraChecker] Caching MainCamera: {cam.gameObject.name} at position {cam.transform.position}");
         }
         cachedCam = cam;
     }
@@ -24,7 +24,7 @@ public class CameraChecker : MonoBehaviour
     void Start()
     {
         Count++;
-        Debug.LogWarning($"[CameraChecker] CameraChecker instance created. Total instances: {Count}");
+        Debug.Log($"[CameraChecker] CameraChecker instance created. Total instances: {Count}");
     }
 
     void Update()
@@ -41,11 +41,11 @@ public class CameraChecker : MonoBehaviour
             }
             else if (cachedCam != null)
             {
-                Debug.LogWarning("[CameraChecker] Cached MainCamera found but disabled!");
+                Debug.Log("[CameraChecker] Cached MainCamera found but disabled!");
             }
             else
             {
-                Debug.LogWarning("[CameraChecker] Cached MainCamera missing or disabled!");
+                Debug.Log("[CameraChecker] Cached MainCamera missing or disabled!");
             }
         }
     }

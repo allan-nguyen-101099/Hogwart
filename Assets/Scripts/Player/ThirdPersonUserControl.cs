@@ -14,13 +14,14 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 
         private Vector3 m_Move;
 
+        // Callback: called by Unity once when this object first becomes active
         private void Start()
         {
             // get the transform of the main camera
             if (Camera.main != null)
                 m_Cam = Camera.main.transform;
             else
-                Debug.LogWarning(
+                Debug.Log(
                     "Warning: no main camera found. Third person character needs a Camera tagged \"MainCamera\", for camera-relative controls.");
             // we use self-relative controls in this case, which probably isn't what the user wants, but hey, we warned them!
             // get the third person character ( this should never be null due to require component )
@@ -32,6 +33,7 @@ namespace UnityStandardAssets.Characters.ThirdPerson
         }
 
 
+        // Callback: called by Unity every frame (polls jump key input)
         private void Update()
         {
             if (Chat.Instance.isWritting) return;
@@ -42,7 +44,7 @@ namespace UnityStandardAssets.Characters.ThirdPerson
         }
 
 
-        // Fixed update is called in sync with physics
+        // Callback: called by Unity every fixed physics timestep (reads WASD movement and passes to character motor)
         private void FixedUpdate()
         {
             if (Chat.Instance.isWritting)

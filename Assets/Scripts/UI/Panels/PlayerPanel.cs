@@ -24,6 +24,7 @@ public class PlayerPanel : MonoBehaviour {
         Exp = 3
     }
 
+    // Callback: called by Unity once when this object first becomes active
     void Start ()
     {
 		//Instance = this;

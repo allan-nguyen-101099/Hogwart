@@ -34,8 +34,7 @@ public class ItemData {
 	}
 	public int price;
 
-	// CUSTOM ATTRIBUTES BASED ON ITEM TYPE
-	public int health;
+	// public int health;
 
 	public enum ItemType
 	{

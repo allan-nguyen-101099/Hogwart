@@ -12,11 +12,13 @@ public class FPS : MonoBehaviour {
 	public Text fpst;
 	public bool ping = false;
 	
+	// Callback: called by Unity once when this object first becomes active
 	void Start()
 	{
 		timeleft = updateInterval;  
 	}
 	
+	// Callback: called by Unity every frame
 	void Update()
 	{
 		timeleft -= Time.deltaTime;

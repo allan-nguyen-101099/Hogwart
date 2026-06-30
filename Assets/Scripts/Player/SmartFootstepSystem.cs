@@ -23,6 +23,7 @@ public class SmartFootstepSystem : MonoBehaviour {
 	[HideInInspector]public Texture2D currentTexture;
 	[HideInInspector]public bool onTerrain;
 
+	// Callback: called by Unity once when this object first becomes active
 	void Start(){
 		GetTerrainInfo();
 	}
@@ -35,6 +36,7 @@ public class SmartFootstepSystem : MonoBehaviour {
 		}
 	}
 	
+	// Callback: called by Unity every frame
 	void Update () {
 	
 	    Ray ray = new Ray(transform.position + (Vector3.up * 0.1f), Vector3.down);

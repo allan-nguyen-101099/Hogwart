@@ -94,7 +94,7 @@ public class PickupItemSyncer : Photon.MonoBehaviour
     {
         if (targetPlayer == null)
         {
-            Debug.LogWarning("Cant send PickupItem spawn times to unknown targetPlayer.");
+            Debug.Log("Cant send PickupItem spawn times to unknown targetPlayer.");
             return;
         }
 

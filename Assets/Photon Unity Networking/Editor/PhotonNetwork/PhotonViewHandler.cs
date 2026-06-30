@@ -72,7 +72,7 @@ public class PhotonViewHandler : EditorWindow
                 if (view.viewID != 0 || view.prefixBackup != -1 || view.instantiationId != -1)
                 {
 					#if !UNITY_2018_3_OR_NEWER
-                    	Debug.LogWarning("PhotonView on persistent object being fixed (id and prefix must be 0). Was: " + view);
+                    	Debug.Log("PhotonView on persistent object being fixed (id and prefix must be 0). Was: " + view);
 					#endif
                     view.viewID = 0;
                     view.prefixBackup = -1;
@@ -135,7 +135,7 @@ public class PhotonViewHandler : EditorWindow
             {
                 Undo.RecordObject(view, "Automatic viewID change for: "+view.gameObject.name);
 
-                // Debug.LogWarning("setting scene ID: " + view.gameObject.name + " ID: " + view.subId.ID + " scene ID: " + view.GetSceneID() + " IsPersistent: " + EditorUtility.IsPersistent(view.gameObject) + " IsSceneViewIDFree: " + IsSceneViewIDFree(view.subId.ID, view));
+                // Debug.Log("setting scene ID: " + view.gameObject.name + " ID: " + view.subId.ID + " scene ID: " + view.GetSceneID() + " IsPersistent: " + EditorUtility.IsPersistent(view.gameObject) + " IsSceneViewIDFree: " + IsSceneViewIDFree(view.subId.ID, view));
                 int nextViewId = PhotonViewHandler.GetID(lastUsedId, usedInstanceViewNumbers);
 
                 view.viewID = nextViewId;
@@ -163,7 +163,7 @@ public class PhotonViewHandler : EditorWindow
 
         if (fixedSomeId)
         {
-            //Debug.LogWarning("Some subId was adjusted."); // this log is only interesting for Exit Games
+            //Debug.Log("Some subId was adjusted."); // this log is only interesting for Exit Games
         }
     }
 

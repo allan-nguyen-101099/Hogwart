@@ -223,23 +223,27 @@ public class Player : Photon.MonoBehaviour {
     private Quaternion correctPlayerRot = Quaternion.identity;
     private float creationTime;
 
+    // Callback: called by Unity when this GameObject is enabled
     void OnEnable()
     {
         creationTime = Time.realtimeSinceStartup;
-        Debug.LogWarning($"[Player.OnEnable()] GameObject enabled at {creationTime}");
+        Debug.Log($"[Player.OnEnable()] GameObject enabled at {creationTime}");
     }
 
+    // Callback: called by Photon when this player object is instantiated over the network
     void OnPhotonInstantiate(PhotonMessageInfo info)
     {
-        Debug.LogWarning($"[Player.OnPhotonInstantiate()] Called! isMine: {photonView.isMine}");
-        Debug.LogWarning($"[Player.OnPhotonInstantiate()] photonView data: owner={photonView.owner}, viewID={photonView.viewID}");
+        Debug.Log($"[Player.OnPhotonInstantiate()] Called! isMine: {photonView.isMine}");
+        Debug.Log($"[Player.OnPhotonInstantiate()] photonView data: owner={photonView.owner}, viewID={photonView.viewID}");
     }
 
+    // Callback: called by Unity when this GameObject is disabled
     void OnDisable()
     {
         Debug.LogError($"[Player.OnDisable()] GameObject disabled");
     }
 
+    // Callback: called by Unity when this GameObject is destroyed
     void OnDestroy()
     {
         float lifespan = Time.realtimeSinceStartup - creationTime;
@@ -247,27 +251,28 @@ public class Player : Photon.MonoBehaviour {
         Debug.LogError($"[Player.OnDestroy()] Full stack trace:\n{System.Environment.StackTrace}");
     }
 
+    // Callback: called by Unity once when this object first becomes active
     void Start() {
-        Debug.LogWarning($"[Player.Start()] isMine: {photonView.isMine}, Owner: {photonView.owner}");
+        Debug.Log($"[Player.Start()] isMine: {photonView.isMine}, Owner: {photonView.owner}");
         
         try
         {
             if (photonView.isMine)
             {
-                Debug.LogWarning("[Player.Start()] This is MY player, setting up owner components");
+                Debug.Log("[Player.Start()] This is MY player, setting up owner components");
                 _instance = this;
                 
                 try
                 {
                     if (SkillsUI.Instance != null)
                     {
-                        Debug.LogWarning("[Player.Start()] Calling SkillsUI.displayUnlockedSkills()");
+                        Debug.Log("[Player.Start()] Calling SkillsUI.displayUnlockedSkills()");
                         SkillsUI.Instance.displayUnlockedSkills();
-                        Debug.LogWarning("[Player.Start()] SkillsUI.displayUnlockedSkills() completed");
+                        Debug.Log("[Player.Start()] SkillsUI.displayUnlockedSkills() completed");
                     }
                     else
                     {
-                        Debug.LogWarning("SkillsUI.Instance not found");
+                        Debug.Log("SkillsUI.Instance not found");
                     }
                 }
                 catch (System.Exception ex)
@@ -277,9 +282,9 @@ public class Player : Photon.MonoBehaviour {
 
                 try
                 {
-                    Debug.LogWarning("[Player.Start()] Calling startHealthRegeneration()");
+                    Debug.Log("[Player.Start()] Calling startHealthRegeneration()");
                     startHealthRegeneration();
-                    Debug.LogWarning("[Player.Start()] startHealthRegeneration() completed");
+                    Debug.Log("[Player.Start()] startHealthRegeneration() completed");
                 }
                 catch (System.Exception ex)
                 {
@@ -288,9 +293,9 @@ public class Player : Photon.MonoBehaviour {
 
                 try
                 {
-                    Debug.LogWarning("[Player.Start()] Calling startManaRegeneration()");
+                    Debug.Log("[Player.Start()] Calling startManaRegeneration()");
                     startManaRegeneration();
-                    Debug.LogWarning("[Player.Start()] startManaRegeneration() completed");
+                    Debug.Log("[Player.Start()] startManaRegeneration() completed");
                 }
                 catch (System.Exception ex)
                 {
@@ -301,7 +306,7 @@ public class Player : Photon.MonoBehaviour {
                 {
                     if (trailRenderer != null)
                     {
-                        Debug.LogWarning("[Player.Start()] Destroying trailRenderer");
+                        Debug.Log("[Player.Start()] Destroying trailRenderer");
                         Destroy(trailRenderer);
                     }
                 }
@@ -310,11 +315,11 @@ public class Player : Photon.MonoBehaviour {
                     Debug.LogError($"[Player.Start()] Error destroying trailRenderer: {ex.Message}\n{ex.StackTrace}");
                 }
 
-                Debug.LogWarning("[Player.Start()] Owner setup COMPLETED SUCCESSFULLY");
+                Debug.Log("[Player.Start()] Owner setup COMPLETED SUCCESSFULLY");
             }
             else
             {
-                Debug.LogWarning("[Player.Start()] This is NOT my player, destroying non-owner components");
+                Debug.Log("[Player.Start()] This is NOT my player, destroying non-owner components");
                 try
                 {
                     if (Chat.Instance != null && photonView.owner != null)
@@ -323,7 +328,7 @@ public class Player : Photon.MonoBehaviour {
                     }
                     else
                     {
-                        Debug.LogWarning($"[Player.Start()] Chat.Instance or owner is null. Chat: {Chat.Instance != null}, Owner: {photonView.owner != null}");
+                        Debug.Log($"[Player.Start()] Chat.Instance or owner is null. Chat: {Chat.Instance != null}, Owner: {photonView.owner != null}");
                     }
                 }
                 catch (System.Exception ex)
@@ -347,7 +352,7 @@ public class Player : Photon.MonoBehaviour {
                 var npcActivatorChild = gameObject.transform.Find("NPCActivator");
                 if (npcActivatorChild != null) Destroy(npcActivatorChild.gameObject);
                 
-                Debug.LogWarning("[Player.Start()] Non-owner setup completed");
+                Debug.Log("[Player.Start()] Non-owner setup completed");
             }
         }
         catch (System.Exception ex)
@@ -364,6 +369,7 @@ public class Player : Photon.MonoBehaviour {
         }
     }
 
+    // Callback: called by Unity every frame
     void Update()
     {
         try
@@ -373,13 +379,13 @@ public class Player : Photon.MonoBehaviour {
                 transform.rotation = Quaternion.Lerp(transform.rotation, this.correctPlayerRot, Time.deltaTime * 5);
             } else {
                 if (!gotFirstUpdate) {
-                    Debug.LogWarning("[Player.Update()] First update frame, setting up UI");
+                    Debug.Log("[Player.Update()] First update frame, setting up UI");
                     
                     try
                     {
-                        Debug.LogWarning("[Player.Update()] Calling photonView.RPC setNick");
+                        Debug.Log("[Player.Update()] Calling photonView.RPC setNick");
                         photonView.RPC("setNick", PhotonTargets.OthersBuffered, PhotonNetwork.player.NickName);
-                        Debug.LogWarning("[Player.Update()] RPC setNick completed");
+                        Debug.Log("[Player.Update()] RPC setNick completed");
                     }
                     catch (System.Exception ex)
                     {
@@ -388,13 +394,13 @@ public class Player : Photon.MonoBehaviour {
 
                     try
                     {
-                        Debug.LogWarning("[Player.Update()] Finding health bar UI element");
+                        Debug.Log("[Player.Update()] Finding health bar UI element");
                         healthBar = GameObject.Find("Canvas/PlayerPanel/HP Orb Bg/HP").GetComponent<Image>();
                         if (healthBar == null)
                         {
                             Debug.LogError("[Player.Update()] healthBar is NULL after finding!");
                         }
-                        Debug.LogWarning("[Player.Update()] Health bar found");
+                        Debug.Log("[Player.Update()] Health bar found");
                     }
                     catch (System.Exception ex)
                     {
@@ -403,13 +409,13 @@ public class Player : Photon.MonoBehaviour {
 
                     try
                     {
-                        Debug.LogWarning("[Player.Update()] Updating PlayerPanel bars");
+                        Debug.Log("[Player.Update()] Updating PlayerPanel bars");
                         if (PlayerPanel.Instance != null)
                         {
                             PlayerPanel.Instance.updateBar(PlayerPanel.BarType.Health, characterData.health, characterData.maxHealth);
                             PlayerPanel.Instance.updateBar(PlayerPanel.BarType.Exp, characterData.exp, XP_BASE * level);
                             PlayerPanel.Instance.updateBar(PlayerPanel.BarType.Mana, characterData.mana, characterData.maxMana);
-                            Debug.LogWarning("[Player.Update()] PlayerPanel bars updated");
+                            Debug.Log("[Player.Update()] PlayerPanel bars updated");
                         }
                         else
                         {
@@ -422,7 +428,7 @@ public class Player : Photon.MonoBehaviour {
                     }
 
                     gotFirstUpdate = true;
-                    Debug.LogWarning("[Player.Update()] First update COMPLETED");
+                    Debug.Log("[Player.Update()] First update COMPLETED");
                 }
 
                 if (healthBar != null && healthBar.fillAmount != health) {
@@ -442,6 +448,7 @@ public class Player : Photon.MonoBehaviour {
         }
     }
 
+    // Callback: called by Unity every frame after all Update calls (handles death state transition)
     void LateUpdate()
     {
         if(gotFirstUpdate && isDead && this.anim.GetBool("Dead") == false ) {
@@ -529,16 +536,17 @@ public class Player : Photon.MonoBehaviour {
 
 	private bool broom;
 
+    // Callback: called by Photon every network tick to sync player position and animation state
     void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
         try
         {
-            Debug.LogWarning($"[Player.OnPhotonSerializeView()] Called, isWriting: {stream.isWriting}, isMine: {photonView.isMine}");
+            Debug.Log($"[Player.OnPhotonSerializeView()] Called, isWriting: {stream.isWriting}, isMine: {photonView.isMine}");
             
             if (stream.isWriting)
             {
                 // We own this player: send the others our data
-                Debug.LogWarning("[Player.OnPhotonSerializeView()] Writing data");
+                Debug.Log("[Player.OnPhotonSerializeView()] Writing data");
                 stream.SendNext(transform.position);
                 stream.SendNext(transform.rotation);
                 stream.SendNext(anim.GetFloat("Forward"));
@@ -548,12 +556,12 @@ public class Player : Photon.MonoBehaviour {
                 stream.SendNext(anim.GetBool("InvokeSpell"));
                 stream.SendNext(anim.GetInteger("SpellType"));
                 stream.SendNext(anim.GetBool("Broomstick"));
-                Debug.LogWarning("[Player.OnPhotonSerializeView()] Writing completed");
+                Debug.Log("[Player.OnPhotonSerializeView()] Writing completed");
             }
             else
             {
                 // Network player, receive data
-                Debug.LogWarning("[Player.OnPhotonSerializeView()] Reading data");
+                Debug.Log("[Player.OnPhotonSerializeView()] Reading data");
                 this.correctPlayerPos = (Vector3)stream.ReceiveNext();
                 this.correctPlayerRot = (Quaternion)stream.ReceiveNext();
 
@@ -569,10 +577,10 @@ public class Player : Photon.MonoBehaviour {
                 }
                 else
                 {
-                    Debug.LogWarning("[Player.OnPhotonSerializeView()] Animator is null!");
+                    Debug.Log("[Player.OnPhotonSerializeView()] Animator is null!");
                 }
 
-                Debug.LogWarning("[Player.OnPhotonSerializeView()] About to access PlayerHotkeys");
+                Debug.Log("[Player.OnPhotonSerializeView()] About to access PlayerHotkeys");
                 var playerHotkeys = gameObject.GetComponent<PlayerHotkeys>();
                 if (playerHotkeys != null && playerHotkeys.broom != null)
                 {
@@ -581,11 +589,11 @@ public class Player : Photon.MonoBehaviour {
                     } else {
                         playerHotkeys.broom.SetActive(false);
                     }
-                    Debug.LogWarning("[Player.OnPhotonSerializeView()] Broom status updated");
+                    Debug.Log("[Player.OnPhotonSerializeView()] Broom status updated");
                 }
                 else
                 {
-                    Debug.LogWarning($"[Player.OnPhotonSerializeView()] PlayerHotkeys or broom is null! PlayerHotkeys: {playerHotkeys != null}, broom: {(playerHotkeys != null ? playerHotkeys.broom != null : false)}");
+                    Debug.Log($"[Player.OnPhotonSerializeView()] PlayerHotkeys or broom is null! PlayerHotkeys: {playerHotkeys != null}, broom: {(playerHotkeys != null ? playerHotkeys.broom != null : false)}");
                 }
 
                 if (gotFirstUpdate == false) {
@@ -594,7 +602,7 @@ public class Player : Photon.MonoBehaviour {
                     gotFirstUpdate = true;
                 }
                 
-                Debug.LogWarning("[Player.OnPhotonSerializeView()] Reading completed");
+                Debug.Log("[Player.OnPhotonSerializeView()] Reading completed");
             }
         }
         catch (System.Exception ex)

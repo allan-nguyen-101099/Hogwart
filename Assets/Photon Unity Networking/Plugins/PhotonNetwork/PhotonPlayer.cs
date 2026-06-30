@@ -330,10 +330,10 @@ public class PhotonPlayer : IComparable<PhotonPlayer>, IComparable<int>, IEquata
             }
         }
 
-        //UnityEngine.Debug.LogWarning("Debug. " + currentPlayerId + " lower: " + lowestId + " higher: " + nextHigherId + " ");
-        //UnityEngine.Debug.LogWarning(this.RoomReference.GetPlayer(currentPlayerId));
-        //UnityEngine.Debug.LogWarning(this.RoomReference.GetPlayer(lowestId));
-        //if (nextHigherId != int.MaxValue) UnityEngine.Debug.LogWarning(this.RoomReference.GetPlayer(nextHigherId));
+        //UnityEngine.Debug.Log("Debug. " + currentPlayerId + " lower: " + lowestId + " higher: " + nextHigherId + " ");
+        //UnityEngine.Debug.Log(this.RoomReference.GetPlayer(currentPlayerId));
+        //UnityEngine.Debug.Log(this.RoomReference.GetPlayer(lowestId));
+        //if (nextHigherId != int.MaxValue) UnityEngine.Debug.Log(this.RoomReference.GetPlayer(nextHigherId));
         return (nextHigherId != int.MaxValue) ? players[nextHigherId] : players[lowestId];
     }
 

@@ -12,12 +12,13 @@ public class BroomstickControl : MonoBehaviour
     private Vector3 targetVelocity;
     public float upSpeed;
 
-    // Use this for initialization
+    // Callback: called by Unity once when this object first becomes active
     private void Start()
     {
         rigidbody = GetComponent<Rigidbody>();
     }
 
+    // Callback: called by Unity every fixed physics timestep
     private void FixedUpdate()
     {
 
@@ -34,6 +35,7 @@ public class BroomstickControl : MonoBehaviour
         rigidbody.velocity = targetVelocity;
     }
 
+    // Callback: called by Unity every frame
     private void Update()
     {
         var rotation = Quaternion.LookRotation(transform.position -

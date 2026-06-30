@@ -72,10 +72,6 @@ public class Item : ItemData
 		return Service.db.SelectKey<Item> ("item", id);
 	}
 
-	/**
-	 * Use this item
-	 *
-	 */
 	public void use () {
 		switch (type) {
 			case Item.ItemType.Consumable:
@@ -92,11 +88,7 @@ public class Item : ItemData
 		characterItem.save ();
 	}
 
-	/**
-	 * Validate if this item can be set on the select equipment position
-	 *
-	 */
-	public bool isValidEquipmentPosition (CharacterItem.equipmentPosition pos) {
+	public bool isValidEquipmentPosition(CharacterItem.equipmentPosition pos) {
 		switch (type) {
 			case ItemType.Weapon:
 					if (pos == CharacterItem.equipmentPosition.handLeft || pos == CharacterItem.equipmentPosition.handRight) {

@@ -12,6 +12,7 @@ public class CreatePanel : MonoBehaviour {
 	public Text errorText;
 	public Button createCharacterButton;
 
+	// Callback: called by Unity when this panel is shown/enabled
 	void OnEnable() {
 		// Auto-find UI elements if not assigned
 		if (nameInput == null) {

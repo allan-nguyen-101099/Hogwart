@@ -6,6 +6,7 @@ public class OpenBook : MonoBehaviour {
 	public bool isBook = true;
 	public int book;
 
+	// Callback: called by Unity when player clicks this object with the mouse
 	void OnMouseDown () {
 		if (isBook) {
 			GameObject.Find ("Canvas/Books/Panel").SetActive (true);

@@ -11,6 +11,7 @@ public class PlayerHotkeys : MonoBehaviour
     public GameObject broom;
     public GameObject lumos;
 
+    // Callback: called by Unity once when this script instance is loaded (before Start)
     private void Awake()
     {
         // Only set singleton for local owner to avoid remote player overwrites
@@ -21,6 +22,7 @@ public class PlayerHotkeys : MonoBehaviour
         }
     }
 
+    // Callback: called by Unity every frame (polls all hotkey presses)
     private void Update()
     {
         if (Chat.Instance.isWritting) return;
@@ -62,17 +64,17 @@ public class PlayerHotkeys : MonoBehaviour
 
             if (InputSystemAgent.GetKeyDown("1"))
             {
-                Debug.LogWarning("[PlayerHotkeys] KEY 1 PRESSED - Calling spellCast(0)");
+                Debug.Log("[PlayerHotkeys] KEY 1 PRESSED - Calling spellCast(0)");
                 PlayerCombat.Instance.spellCast(0);
             }
             else if (InputSystemAgent.GetKeyDown("2"))
             {
-                Debug.LogWarning("[PlayerHotkeys] KEY 2 PRESSED - Calling spellCast(1)");
+                Debug.Log("[PlayerHotkeys] KEY 2 PRESSED - Calling spellCast(1)");
                 PlayerCombat.Instance.spellCast(1);
             }
             else if (InputSystemAgent.GetKeyDown("3"))
             {
-                Debug.LogWarning("[PlayerHotkeys] KEY 3 PRESSED - Calling spellCast(2)");
+                Debug.Log("[PlayerHotkeys] KEY 3 PRESSED - Calling spellCast(2)");
                 PlayerCombat.Instance.spellCast(2);
             }
         }
@@ -80,7 +82,7 @@ public class PlayerHotkeys : MonoBehaviour
         {
             if (InputSystemAgent.GetKeyDown("1") || InputSystemAgent.GetKeyDown("2") || InputSystemAgent.GetKeyDown("3"))
             {
-                Debug.LogWarning("[PlayerHotkeys] Hotkey pressed but NO TARGET! Cannot cast spell.");
+                Debug.Log("[PlayerHotkeys] Hotkey pressed but NO TARGET! Cannot cast spell.");
             }
         }
     }

@@ -17,6 +17,7 @@ public class Chat : MonoBehaviour {
 	public static int MAX_CHARACTERS = 5000;
      private bool hasMouseOver = false;
 
+	// Callback: called by Unity once when this object first becomes active
 	void Start () {
 		Instance = this;
 	}
@@ -32,10 +33,12 @@ public class Chat : MonoBehaviour {
 	   background.enabled = false;
     }
 
+    // Callback: called by Unity UI Event Trigger when pointer enters the chat area (inspector-wired)
     public void onPointerEnter () {
         background.enabled = true;
         hasMouseOver = true;
     }
+    // Callback: called by Unity UI Event Trigger when pointer leaves the chat area (inspector-wired)
     public void onPointerExit () {
         background.enabled = false;
         hasMouseOver = false;

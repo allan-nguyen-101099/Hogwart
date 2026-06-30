@@ -349,7 +349,7 @@ using ExitGames.Client.Photon;
                 opParameters[ParameterCode.Add] = opJoinRandomRoomParams.ExpectedUsers;
             }
 
-            // UnityEngine.Debug.LogWarning("OpJoinRandom: " + opParameters.ToStringFull());
+            // UnityEngine.Debug.Log("OpJoinRandom: " + opParameters.ToStringFull());
             return this.SendOperation(OperationCode.JoinRandomGame, opParameters, SendOptions.SendReliable);
         }
 
@@ -707,7 +707,7 @@ using ExitGames.Client.Photon;
 
             if (encryptionMode == EncryptionMode.DatagramEncryption && expectedProtocol != ConnectionProtocol.Udp)
             {
-                Debug.LogWarning("Expected protocol set to UDP, due to encryption mode DatagramEncryption. Changing protocol in PhotonServerSettings from: " + PhotonNetwork.PhotonServerSettings.Protocol);
+                Debug.Log("Expected protocol set to UDP, due to encryption mode DatagramEncryption. Changing protocol in PhotonServerSettings from: " + PhotonNetwork.PhotonServerSettings.Protocol);
                 PhotonNetwork.PhotonServerSettings.Protocol = ConnectionProtocol.Udp;
                 expectedProtocol = ConnectionProtocol.Udp;
             }

@@ -6,6 +6,7 @@ public class UIScreenPos : MonoBehaviour {
 
 	public GameObject follow;
 	
+	// Callback: called by Unity every frame after all Update calls (positions this UI element over a world object)
 	void LateUpdate () {
         if (follow == null || Camera.main == null) {
             return;

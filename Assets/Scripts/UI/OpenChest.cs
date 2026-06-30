@@ -14,11 +14,13 @@ public class OpenChest : MonoBehaviour
 
     private bool isOpen = false;
 
+    // Callback: called by Unity once when this object first becomes active
     private void Start()
     {
         this.anim = this.GetComponent<Animator>();
     }
 
+    // Callback: called by Unity when player clicks this chest with the mouse
     void OnMouseDown()
     {
         if (isLocked) {

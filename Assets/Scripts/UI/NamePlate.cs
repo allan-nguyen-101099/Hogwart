@@ -14,6 +14,7 @@ public class NamePlate : MonoBehaviour {
 	public static Color COLOR_NORMAL = Color.white;
 	public static Color COLOR_ENEMY = Color.red;
 
+	// Callback: called by Unity once when this object first becomes active
 	void Start() {
 		gameObject.name = transform.parent.name;
 		//transform.SetParent(GameObject.Find ("Canvas/Plates").transform);

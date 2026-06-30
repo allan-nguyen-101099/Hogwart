@@ -23,6 +23,7 @@ public class ConfirmationPanel : MonoBehaviour
         }
     }
 
+    // Callback: called by Unity once when this object first becomes active
     void Start()
     {
         if (_instance == null)

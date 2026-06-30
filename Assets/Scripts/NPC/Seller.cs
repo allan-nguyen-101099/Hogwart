@@ -2,6 +2,7 @@
 
 public class Seller : NPC {
 	
+	// Callback: called by NPC.OnMouseDown when player clicks this Seller NPC
 	public override void OnClick() {
         Menu.Instance.showPanel ("SellerPanel", false);
 	}

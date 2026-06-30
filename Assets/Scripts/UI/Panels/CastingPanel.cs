@@ -12,12 +12,12 @@ public class CastingPanel : MonoBehaviour {
 	private float curTime = 10f;
 	public bool isCasting = false;
 
-	// Use this for initialization
+	// Callback: called by Unity once when this object first becomes active
 	void Start () {
 		//Instance = this;
 	}
 	
-	// Update is called once per frame
+	// Callback: called by Unity every frame
 	void Update () {
 			curTime -= Time.deltaTime;
 			bar.fillAmount = curTime / skillTime;

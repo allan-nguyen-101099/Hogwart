@@ -538,7 +538,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
     {
         if (this.AuthValues == null)
         {
-            Debug.LogWarning("ReconnectToMaster() with AuthValues == null is not correct!");
+            Debug.Log("ReconnectToMaster() with AuthValues == null is not correct!");
             this.AuthValues = new AuthenticationValues();
         }
         this.AuthValues.Token = this.tokenCache;
@@ -554,7 +554,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
     {
         if (this.AuthValues == null)
         {
-            Debug.LogWarning("ReconnectAndRejoin() with AuthValues == null is not correct!");
+            Debug.Log("ReconnectAndRejoin() with AuthValues == null is not correct!");
             this.AuthValues = new AuthenticationValues();
         }
         this.AuthValues.Token = this.tokenCache;
@@ -574,7 +574,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
     {
         if (PhotonHandler.AppQuits)
         {
-            Debug.LogWarning("Ignoring Connect() because app gets closed. If this is an error, check PhotonHandler.AppQuits.");
+            Debug.Log("Ignoring Connect() because app gets closed. If this is an error, check PhotonHandler.AppQuits.");
             return false;
         }
 
@@ -657,7 +657,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
     {
         if (PhotonHandler.AppQuits)
         {
-            Debug.LogWarning("Ignoring Connect() because app gets closed. If this is an error, check PhotonHandler.AppQuits.");
+            Debug.Log("Ignoring Connect() because app gets closed. If this is an error, check PhotonHandler.AppQuits.");
             return false;
         }
 
@@ -692,7 +692,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
     {
         if (PhotonHandler.AppQuits)
         {
-            Debug.LogWarning("Ignoring Connect() because app gets closed. If this is an error, check PhotonHandler.AppQuits.");
+            Debug.Log("Ignoring Connect() because app gets closed. If this is an error, check PhotonHandler.AppQuits.");
             return false;
         }
 
@@ -737,12 +737,12 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
         }
         if (this.AuthValues.AuthType != CustomAuthenticationType.Xbox)
         {
-            UnityEngine.Debug.LogWarning("UNITY_XBOXONE builds must use AuthValues.AuthType \"CustomAuthenticationType.Xbox\". PUN sets this value now. Refer to the online docs to avoid this warning.");
+            UnityEngine.Debug.Log("UNITY_XBOXONE builds must use AuthValues.AuthType \"CustomAuthenticationType.Xbox\". PUN sets this value now. Refer to the online docs to avoid this warning.");
             this.AuthValues.AuthType = CustomAuthenticationType.Xbox;
         }
         if (this.TransportProtocol != ConnectionProtocol.WebSocketSecure)
         {
-            UnityEngine.Debug.LogWarning("UNITY_XBOXONE builds must use WSS (Secure WebSockets) as Transport Protocol. Overriding PhotonServerSettings.");
+            UnityEngine.Debug.Log("UNITY_XBOXONE builds must use WSS (Secure WebSockets) as Transport Protocol. Overriding PhotonServerSettings.");
             protocolOverride = ConnectionProtocol.WebSocketSecure;
         }
         #endif
@@ -753,7 +753,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
             {
                 if (PhotonNetwork.logLevel >= PhotonLogLevel.ErrorsOnly)
                 {
-                    Debug.LogWarning("Using PhotonServerSettings.Protocol when leaving the NameServer (AuthMode is AuthOnceWss): " + PhotonNetwork.PhotonServerSettings.Protocol);
+                    Debug.Log("Using PhotonServerSettings.Protocol when leaving the NameServer (AuthMode is AuthOnceWss): " + PhotonNetwork.PhotonServerSettings.Protocol);
                 }
                 protocolOverride = PhotonNetwork.PhotonServerSettings.Protocol;
             }
@@ -761,7 +761,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
             {
                 if (PhotonNetwork.logLevel >= PhotonLogLevel.ErrorsOnly)
                 {
-                    Debug.LogWarning("Using WebSocket to connect NameServer (AuthMode is AuthOnceWss).");
+                    Debug.Log("Using WebSocket to connect NameServer (AuthMode is AuthOnceWss).");
                 }
                 protocolOverride = ConnectionProtocol.WebSocketSecure;
             }
@@ -803,7 +803,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
 
         #if !UNITY_EDITOR && (UNITY_WINRT)
         // this automatically uses a separate assembly-file with Win8-style Socket usage (not possible in Editor)
-        Debug.LogWarning("Using PingWindowsStore");
+        Debug.Log("Using PingWindowsStore");
         PhotonHandler.PingImplementation = typeof(PingWindowsStore);    // but for ping, we have to set the implementation explicitly to Win 8 Store/Phone
         #endif
 
@@ -857,7 +857,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
 
         if (PhotonNetwork.logLevel >= PhotonLogLevel.ErrorsOnly)
         {
-            Debug.LogWarning("Protocol switch from: " + this.TransportProtocol + " to: " + protocolOverride + ".");
+            Debug.Log("Protocol switch from: " + this.TransportProtocol + " to: " + protocolOverride + ".");
         }
 
         this.TransportProtocol = protocolOverride;
@@ -872,7 +872,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
         {
             if (!PhotonHandler.AppQuits)
             {
-                Debug.LogWarning(string.Format("Can't execute Disconnect() while not connected. Nothing changed. State: {0}", this.State));
+                Debug.Log(string.Format("Can't execute Disconnect() while not connected. Nothing changed. State: {0}", this.State));
             }
             return;
         }
@@ -1055,7 +1055,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
 
     private void ReadoutProperties(Hashtable gameProperties, Hashtable pActorProperties, int targetActorNr)
     {
-        // Debug.LogWarning("ReadoutProperties gameProperties: " + gameProperties.ToStringFull() + " pActorProperties: " + pActorProperties.ToStringFull() + " targetActorNr: " + targetActorNr);
+        // Debug.Log("ReadoutProperties gameProperties: " + gameProperties.ToStringFull() + " pActorProperties: " + pActorProperties.ToStringFull() + " targetActorNr: " + targetActorNr);
 
         // read per-player properties (or those of one target player) and cache those locally
         if (pActorProperties != null && pActorProperties.Count > 0)
@@ -1127,7 +1127,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
     {
         if (this.LocalPlayer == null)
         {
-            Debug.LogWarning(string.Format("LocalPlayer is null or not in mActors! LocalPlayer: {0} mActors==null: {1} newID: {2}",this.LocalPlayer,this.mActors == null,newID));
+            Debug.Log(string.Format("LocalPlayer is null or not in mActors! LocalPlayer: {0} mActors==null: {1} newID: {2}",this.LocalPlayer,this.mActors == null,newID));
         }
 
         if (this.mActors.ContainsKey(this.LocalPlayer.ID))
@@ -1198,7 +1198,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
     {
         if (this.tempInstantiationData.Count > 0)
         {
-            Debug.LogWarning("It seems some instantiation is not completed, as instantiation data is used. You should make sure instantiations are paused when calling this method. Cleaning now, despite this.");
+            Debug.Log("It seems some instantiation is not completed, as instantiation data is used. You should make sure instantiations are paused when calling this method. Cleaning now, despite this.");
         }
 
         // Destroy GO's (if we should)
@@ -1395,7 +1395,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
 
             if (player.IsInactive && _isAlreadyInactive)
             {
-                Debug.LogWarning("HandleEventLeave for player ID: " + actorID + " isInactive: " + player.IsInactive + ". Stopping handling if inactive.");
+                Debug.Log("HandleEventLeave for player ID: " + actorID + " isInactive: " + player.IsInactive + ". Stopping handling if inactive.");
                 return;
             }
         }
@@ -1597,7 +1597,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
         }
         else if (level == DebugLevel.WARNING)
         {
-            Debug.LogWarning(message);
+            Debug.Log(message);
         }
         else if (level == DebugLevel.INFO && PhotonNetwork.logLevel >= PhotonLogLevel.Informational)
         {
@@ -1638,7 +1638,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
             }
             else if (operationResponse.ReturnCode == ErrorCode.NoRandomMatchFound)
             {
-                Debug.LogWarning("Operation failed: " + operationResponse.ToStringFull());
+                Debug.Log("Operation failed: " + operationResponse.ToStringFull());
             }
             else
             {
@@ -1693,7 +1693,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
                     if (operationResponse.ReturnCode == ErrorCode.MaxCcuReached)
                     {
                         if (PhotonNetwork.logLevel >= PhotonLogLevel.Informational)
-                            Debug.LogWarning(string.Format("Currently, the limit of users is reached for this title. Try again later. Disconnecting"));
+                            Debug.Log(string.Format("Currently, the limit of users is reached for this title. Try again later. Disconnecting"));
                         SendMonoMessage(PhotonNetworkingMessage.OnPhotonMaxCccuReached);
                         SendMonoMessage(PhotonNetworkingMessage.OnConnectionFail, DisconnectCause.MaxCcuReached);
                     }
@@ -1893,7 +1893,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
                     if (operationResponse.ReturnCode != 0)
                     {
                         if (PhotonNetwork.logLevel >= PhotonLogLevel.Informational)
-                            Debug.LogWarning(string.Format("CreateRoom failed, client stays on masterserver: {0}.", operationResponse.ToStringFull()));
+                            Debug.Log(string.Format("CreateRoom failed, client stays on masterserver: {0}.", operationResponse.ToStringFull()));
 
                         this.State = (this.insideLobby) ? ClientState.JoinedLobby : ClientState.ConnectedToMaster;
                         SendMonoMessage(PhotonNetworkingMessage.OnPhotonCreateRoomFailed, operationResponse.ReturnCode, operationResponse.DebugMessage);
@@ -1960,7 +1960,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
                     }
                     else if (PhotonNetwork.logLevel >= PhotonLogLevel.Informational)
                     {
-                        Debug.LogWarning(string.Format("JoinRandom failed: {0}.", operationResponse.ToStringFull()));
+                        Debug.Log(string.Format("JoinRandom failed: {0}.", operationResponse.ToStringFull()));
                     }
 
                     SendMonoMessage(PhotonNetworkingMessage.OnPhotonRandomJoinFailed, operationResponse.ReturnCode, operationResponse.DebugMessage);
@@ -2072,7 +2072,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
                 break;
 
             default:
-                Debug.LogWarning(string.Format("OperationResponse unhandled: {0}", operationResponse.ToString()));
+                Debug.Log(string.Format("OperationResponse unhandled: {0}", operationResponse.ToString()));
                 break;
         }
 
@@ -2245,10 +2245,10 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
                     Debug.LogError("Exception while connecting to: " + this.ServerAddress + ". Check if the server is available.");
                     if (this.ServerAddress == null || this.ServerAddress.StartsWith("127.0.0.1"))
                     {
-                        Debug.LogWarning("The server address is 127.0.0.1 (localhost): Make sure the server is running on this machine. Android and iOS emulators have their own localhost.");
+                        Debug.Log("The server address is 127.0.0.1 (localhost): Make sure the server is running on this machine. Android and iOS emulators have their own localhost.");
                         if (this.ServerAddress == this.GameServerAddress)
                         {
-                            Debug.LogWarning("This might be a misconfiguration in the game server config. You need to edit it to a (public) address.");
+                            Debug.Log("This might be a misconfiguration in the game server config. You need to edit it to a (public) address.");
                         }
                     }
 
@@ -2276,7 +2276,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
                     if (this.UsedProtocol == ConnectionProtocol.Udp)
                     {
 
-                        Debug.LogWarning("UDP Connection timed out, Reconnecting using TCP");
+                        Debug.Log("UDP Connection timed out, Reconnecting using TCP");
 
                         PhotonNetwork.PhotonServerSettings.Protocol = ConnectionProtocol.Tcp;
 
@@ -2296,7 +2296,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
 
                     if (!_isReconnecting)
                     {
-                        Debug.LogWarning(statusCode + " while connecting to: " + this.ServerAddress + ". Check if the server is available.");
+                        Debug.Log(statusCode + " while connecting to: " + this.ServerAddress + ". Check if the server is available.");
 
                         this.IsInitialConnect = false;
                         cause = (DisconnectCause)statusCode;
@@ -2333,7 +2333,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
             case StatusCode.DisconnectByServerUserLimit:
                 if (this.IsInitialConnect)
                 {
-                    Debug.LogWarning(statusCode + " while connecting to: " + this.ServerAddress + ". Check if the server is available.");
+                    Debug.Log(statusCode + " while connecting to: " + this.ServerAddress + ". Check if the server is available.");
 
                     this.IsInitialConnect = false;
                     cause = (DisconnectCause)statusCode;
@@ -2411,7 +2411,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
                 PhotonView requestedView = PhotonView.Find(requestedViewId);
                 if (requestedView == null)
                 {
-                    Debug.LogWarning("Can't find PhotonView of incoming OwnershipRequest. ViewId not found: " + requestedViewId);
+                    Debug.Log("Can't find PhotonView of incoming OwnershipRequest. ViewId not found: " + requestedViewId);
                     break;
                 }
 
@@ -2421,7 +2421,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
                 switch (requestedView.ownershipTransfer)
                 {
                     case OwnershipOption.Fixed:
-                        Debug.LogWarning("Ownership mode == fixed. Ignoring request.");
+                        Debug.Log("Ownership mode == fixed. Ignoring request.");
                         break;
                     case OwnershipOption.Takeover:
                         if (currentOwner == requestedView.ownerId || (currentOwner == 0 && requestedView.ownerId == this.mMasterClientId) || requestedView.ownerId == 0)
@@ -2436,7 +2436,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
 
                             if (PhotonNetwork.logLevel >= PhotonLogLevel.Informational)
                             {
-                             Debug.LogWarning(requestedView + " ownership transfered to: "+ actorNr);
+                             Debug.Log(requestedView + " ownership transfered to: "+ actorNr);
                             }
 
                             SendMonoMessage(PhotonNetworkingMessage.OnOwnershipTransfered, new object[] {requestedView, originatingPlayer,_oldOwner});
@@ -2721,7 +2721,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
 
                 if (!PhotonNetwork.CallEvent(photonEvent.Code, photonEvent [ParameterCode.Info], actorNr))
                 {
-                    Debug.LogWarning("Warning: Unhandled Event ErrorInfo (251). Set PhotonNetwork.OnEventCall to the method PUN should call for this event.");
+                    Debug.Log("Warning: Unhandled Event ErrorInfo (251). Set PhotonNetwork.OnEventCall to the method PUN should call for this event.");
                 }
                 break;
 
@@ -2750,7 +2750,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
             {
                 if (!PhotonNetwork.CallEvent(photonEvent.Code, photonEvent [ParameterCode.Data], actorNr))
                 {
-                    Debug.LogWarning("Warning: Unhandled event " + photonEvent + ". Set PhotonNetwork.OnEventCall.");
+                    Debug.Log("Warning: Unhandled event " + photonEvent + ". Set PhotonNetwork.OnEventCall.");
                 }
             }
             break;
@@ -2774,7 +2774,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
         {
             if (DebugOut == DebugLevel.ERROR)
             {
-                UnityEngine.Debug.LogWarning("SetupEncryption() called but ignored. Not XB1 compiled. EncryptionData: " + encryptionData.ToStringFull());
+                UnityEngine.Debug.Log("SetupEncryption() called but ignored. Not XB1 compiled. EncryptionData: " + encryptionData.ToStringFull());
                 return;
             }
         }
@@ -2919,11 +2919,11 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
 
             if (owningPv)
             {
-                Debug.LogWarning("Received RPC \"" + inMethodName + "\" for viewID " + netViewID + " but this PhotonView does not exist! View was/is ours." + (ownerSent ? " Owner called." : " Remote called.") + " By: " + senderID);
+                Debug.Log("Received RPC \"" + inMethodName + "\" for viewID " + netViewID + " but this PhotonView does not exist! View was/is ours." + (ownerSent ? " Owner called." : " Remote called.") + " By: " + senderID);
             }
             else
             {
-                Debug.LogWarning("Received RPC \"" + inMethodName + "\" for viewID " + netViewID + " but this PhotonView does not exist! Was remote PV." + (ownerSent ? " Owner called." : " Remote called.") + " By: " + senderID + " Maybe GO was destroyed but RPC not cleaned up.");
+                Debug.Log("Received RPC \"" + inMethodName + "\" for viewID " + netViewID + " but this PhotonView does not exist! Was remote PV." + (ownerSent ? " Owner called." : " Remote called.") + " By: " + senderID + " Maybe GO was destroyed but RPC not cleaned up.");
             }
             return;
         }
@@ -3612,7 +3612,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
                 {
                     if (view.didAwake)
                     {
-                        Debug.LogWarning("Had to lookup view that wasn't in photonViewList: " + view);
+                        Debug.Log("Had to lookup view that wasn't in photonViewList: " + view);
                     }
                     return view;
                 }
@@ -4346,7 +4346,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
         PhotonView view = this.GetPhotonView(viewID);
         if (view == null)
         {
-            Debug.LogWarning("Received OnSerialization for view ID " + viewID + ". We have no such PhotonView! Ignored this if you're leaving a room. State: " + this.State);
+            Debug.Log("Received OnSerialization for view ID " + viewID + ". We have no such PhotonView! Ignored this if you're leaving a room. State: " + this.State);
             return;
         }
 

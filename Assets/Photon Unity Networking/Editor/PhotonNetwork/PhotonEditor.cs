@@ -249,7 +249,7 @@ public class PhotonEditor : EditorWindow
                 if (lastWarning > EditorApplication.timeSinceStartup - 3)
                 {
                     // Prevent error spam
-                    Debug.LogWarning(CurrentLang.WarningPhotonDisconnect);
+                    Debug.Log(CurrentLang.WarningPhotonDisconnect);
                     lastWarning = EditorApplication.timeSinceStartup;
                 }
 
@@ -595,7 +595,7 @@ public class PhotonEditor : EditorWindow
             PhotonNetwork.PhotonServerSettings.HostType = ServerSettings.HostingOption.PhotonCloud;
             PhotonEditor.SaveSettings();
 
-            Debug.LogWarning(client.Message + " ReturnCode: " + client.ReturnCode);
+            Debug.Log(client.Message + " ReturnCode: " + client.ReturnCode);
             if (client.Message.Contains("registered"))
             {
                 this.photonSetupState = PhotonSetupStates.EmailAlreadyRegistered;
@@ -747,7 +747,7 @@ public class PhotonEditor : EditorWindow
         if (clearList)
         {
             PhotonNetwork.PhotonServerSettings.RpcList.Clear();
-            Debug.LogWarning(CurrentLang.ServerSettingsCleanedWarning);
+            Debug.Log(CurrentLang.ServerSettingsCleanedWarning);
         }
     }
 

@@ -28,10 +28,10 @@ public class Task
         Template = 2,
     }
 
-    public int id;
-    public int quest;
-    public int taskId; // iBoxDB forces to have a unique id
-    public string _phrase;
+    public int id;            // target id for this task (npc, item, etc..)
+    public int quest;         // quest id this task belongs to
+    public int taskId;        // unique id for this task within the quest
+    public string _phrase;    // phrase to display in the quest log, if empty, it will be built automatically
     public string phrase {
         get {
             if (_phrase == null || _phrase == "") {

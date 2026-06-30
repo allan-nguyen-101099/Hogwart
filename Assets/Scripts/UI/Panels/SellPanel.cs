@@ -45,6 +45,7 @@ public class SellPanel : MonoBehaviour {
         children.ForEach(child => Destroy(child));
     }
 
+    // Callback: called by Unity when this panel is shown/enabled
     void OnEnable () {
 		_instance = this;
         itemList.Clear();
@@ -79,6 +80,7 @@ public class SellPanel : MonoBehaviour {
 		updateMoney();
 	}
 
+	// Callback: called by Unity when this panel is hidden/disabled
 	void OnDisable () {
         destroyOldIcons(); // Removes Items in Seller Menu
         selectedItem = null;

@@ -9,10 +9,12 @@ public class QuestManager : MonoBehaviour
     public Dictionary<int, Quest> allQuests = new Dictionary<int, Quest>();
     private Dictionary<int, List<int>> npcQuests = new Dictionary<int, List<int>>();
 
+    // Callback: called by Unity once when this script instance is loaded (before Start)
     private void Awake() {
         Instance = this;
     }
 
+    // Callback: called by Unity once when this object first becomes active
     public void Start()
     {
         Quest quest;

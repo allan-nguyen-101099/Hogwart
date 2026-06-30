@@ -5,7 +5,7 @@ public class MiniMap : MonoBehaviour {
 
 	public Transform target;
 	
-	// Update is called once per frame
+	// Callback: called by Unity every frame
 	void Update () {
 		if (!target) {
 			return;

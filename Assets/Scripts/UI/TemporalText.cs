@@ -11,7 +11,7 @@ public class TemporalText : MonoBehaviour {
 	public Text textObj;
 	public Animator anim;
 
-	// Use this for initialization
+	// Callback: called by Unity once when this object first becomes active
 	void Start () {
 		StartCoroutine ("Destroy");
 	}

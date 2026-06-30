@@ -8,7 +8,7 @@ public class LoadingPanel : MonoBehaviour {
 	public Text text;
 	public GameObject self;
 
-	// Use this for initialization
+	// Callback: called by Unity once when this object first becomes active
 	void Start () {
 		//PhotonNetwork.isMessageQueueRunning = false;
 		//AsyncOperation async = Application.LoadLevelAsync(Menu.defaultLevel);

@@ -53,8 +53,8 @@ public class PhotonStreamQueue
         {
             if (this.m_Objects.Count/this.m_SampleCount != this.m_ObjectsPerSample)
             {
-                Debug.LogWarning("The number of objects sent via a PhotonStreamQueue has to be the same each frame");
-                Debug.LogWarning("Objects in List: " + this.m_Objects.Count + " / Sample Count: " + this.m_SampleCount + " = " + (this.m_Objects.Count/this.m_SampleCount) + " != " + this.m_ObjectsPerSample);
+                Debug.Log("The number of objects sent via a PhotonStreamQueue has to be the same each frame");
+                Debug.Log("Objects in List: " + this.m_Objects.Count + " / Sample Count: " + this.m_SampleCount + " = " + (this.m_Objects.Count/this.m_SampleCount) + " != " + this.m_ObjectsPerSample);
             }
         }
 

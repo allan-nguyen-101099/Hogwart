@@ -59,6 +59,7 @@ public class TargetPanel : MonoBehaviour {
 		health.fillAmount = currentHealth / (float)maxHealth;
 	}
 
+	// Callback: called by Unity when this panel is hidden/disabled
 	void OnDisable () {
 		CancelInvoke("updateHealth");
 	}

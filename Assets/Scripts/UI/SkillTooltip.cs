@@ -15,10 +15,12 @@ public class SkillTooltip : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
 		Menu.Instance.SkillTooltip.SetActive (false);
 	}
 
+    // Callback: called by Unity EventSystem when pointer enters this skill icon
     public void OnPointerEnter(PointerEventData eventData) {
         Show();
     }
 
+    // Callback: called by Unity EventSystem when pointer exits this skill icon
     public void OnPointerExit(PointerEventData eventData) {
         Hide();
     }

@@ -25,7 +25,7 @@ namespace UnityStandardAssets.Vehicles.Ball
             if (Camera.main != null)
                 cam = Camera.main.transform;
             else
-                Debug.LogWarning(
+                Debug.Log(
                     "Warning: no main camera found. Ball needs a Camera tagged \"MainCamera\", for camera-relative controls.");
             // we use world-relative controls in this case, which may not be what the user wants, but hey, we warned them!
         }

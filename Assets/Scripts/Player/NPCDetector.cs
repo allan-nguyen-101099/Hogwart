@@ -8,10 +8,12 @@ NPC detection is separated into a empty child to prevent having 2 collider compo
 public class NPCDetector : MonoBehaviour {
 
 
+	// Callback: called by Unity when another collider enters this trigger (detects nearby NPCs)
 	public void OnTriggerEnter (Collider other) {
 		this.canBeTargeted(other);
 	}
 	
+	// Callback: called by Unity every frame while another collider stays inside this trigger (keeps targeting NPCs in range)
 	public void OnTriggerStay (Collider other) {
 		this.canBeTargeted(other);
 	}

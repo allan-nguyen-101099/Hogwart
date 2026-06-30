@@ -196,7 +196,7 @@ public class PickupItem : Photon.MonoBehaviour, IPunObservable
         #if DEBUG
         // debugging: in some cases, the respawn is "late". it's unclear why! just be aware of this.
         double timeDiffToRespawnTime = PhotonNetwork.time - this.TimeOfRespawn;
-        if (timeDiffToRespawnTime > 0.1f) Debug.LogWarning("Spawn time is wrong by: " + timeDiffToRespawnTime + " (this is not an error. you just need to be aware of this.)");
+        if (timeDiffToRespawnTime > 0.1f) Debug.Log("Spawn time is wrong by: " + timeDiffToRespawnTime + " (this is not an error. you just need to be aware of this.)");
         #endif
 
 

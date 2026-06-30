@@ -21,7 +21,7 @@ public class PlayerEquipment : MonoBehaviour {
 	}
 
 
-	// Use this for initialization
+	// Callback: called by Unity once when this object first becomes active
 	void Start () {
 		_instance = this;
 

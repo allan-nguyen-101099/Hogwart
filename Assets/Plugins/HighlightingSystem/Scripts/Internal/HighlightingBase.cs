@@ -51,7 +51,7 @@ namespace HighlightingSystem
 					}
 					else
 					{
-						Debug.LogWarning("HighlightingSystem : Prevented attempt to set incorrect downsample factor value.");
+						Debug.Log("HighlightingSystem : Prevented attempt to set incorrect downsample factor value.");
 					}
 				}
 			}
@@ -255,11 +255,11 @@ namespace HighlightingSystem
 				Highlighter.SetZWrite(isDepthAvailable ? 0f : 1f);
 				if (isDepthAvailable)
 				{
-					Debug.LogWarning("HighlightingSystem : Framebuffer depth data is available back again and will be used to occlude highlighting. Highlighting occluders disabled.");
+					Debug.Log("HighlightingSystem : Framebuffer depth data is available back again and will be used to occlude highlighting. Highlighting occluders disabled.");
 				}
 				else
 				{
-					Debug.LogWarning("HighlightingSystem : Framebuffer depth data is not available and can't be used to occlude highlighting. Highlighting occluders enabled.");
+					Debug.Log("HighlightingSystem : Framebuffer depth data is not available and can't be used to occlude highlighting. Highlighting occluders enabled.");
 				}
 				isDirty = true;
 			}
@@ -440,7 +440,7 @@ namespace HighlightingSystem
 			{
 				enabled = false;
 				string className = this.GetType().ToString();
-				Debug.LogWarning(string.Format("HighlightingSystem : Only single instance of the HighlightingRenderer component is allowed on a single Gameobject! {0} has been disabled on GameObject with name '{1}'.", className, name));
+				Debug.Log(string.Format("HighlightingSystem : Only single instance of the HighlightingRenderer component is allowed on a single Gameobject! {0} has been disabled on GameObject with name '{1}'.", className, name));
 				return false;
 			}
 			return true;

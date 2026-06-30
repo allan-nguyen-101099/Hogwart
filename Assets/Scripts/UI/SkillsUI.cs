@@ -13,7 +13,7 @@ public class SkillsUI : MonoBehaviour
     private static SkillsUI _instance;
     private readonly Dictionary<Texture2D, Sprite> _spriteCache = new Dictionary<Texture2D, Sprite>();
 
-    // Use this for initialization
+    // Callback: called by Unity once when this object first becomes active
     void Start()
     {
         //Instance = this;
@@ -84,7 +84,7 @@ public class SkillsUI : MonoBehaviour
     {
         if (spell.spellIcon == null)
         {
-            Debug.LogWarning($"[SkillsUI] Slot {slotIndex} ({button.name}) spell '{spell.spellName}' has null spellIcon");
+            Debug.Log($"[SkillsUI] Slot {slotIndex} ({button.name}) spell '{spell.spellName}' has null spellIcon");
             return;
         }
 
@@ -145,7 +145,7 @@ public class SkillsUI : MonoBehaviour
             return;
         }
 
-        Debug.LogWarning($"[SkillsUI] Slot {slotIndex} ({button.name}) has no RawImage/Image target for icon");
+        Debug.Log($"[SkillsUI] Slot {slotIndex} ({button.name}) has no RawImage/Image target for icon");
     }
 
     private Sprite GetOrCreateSprite(Texture2D texture)

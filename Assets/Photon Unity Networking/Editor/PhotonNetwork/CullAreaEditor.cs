@@ -24,7 +24,7 @@ public class CullAreaEditor : Editor
         // Destroying the newly created cull area if there is already one existing
         if (FindObjectsOfType<CullArea>().Length > 1)
         {
-            Debug.LogWarning("Destroying newly created cull area because there is already one existing in the scene.");
+            Debug.Log("Destroying newly created cull area because there is already one existing in the scene.");
 
             DestroyImmediate(cullArea);
 
@@ -213,7 +213,7 @@ public class CullAreaEditor : Editor
                 
                 cullArea.transform.localScale = new Vector3(scaleX, scaleY, scaleZ);
 
-                Debug.LogWarning("Scaling on a single axis can not be lower than 1. Resetting...");
+                Debug.Log("Scaling on a single axis can not be lower than 1. Resetting...");
             }
 
             cullArea.RecreateCellHierarchy = true;

@@ -78,7 +78,7 @@ namespace UnityStandardAssets.ImageEffects
 
         public virtual bool CheckResources ()
 		{
-            Debug.LogWarning ("CheckResources () for " + ToString() + " should be overwritten.");
+            Debug.Log ("CheckResources () for " + ToString() + " should be overwritten.");
             return isSupported;
         }
 
@@ -135,7 +135,7 @@ namespace UnityStandardAssets.ImageEffects
 
         protected void ReportAutoDisable ()
 		{
-            Debug.LogWarning ("The image effect " + ToString() + " has been disabled as it's not supported on the current platform.");
+            Debug.Log ("The image effect " + ToString() + " has been disabled as it's not supported on the current platform.");
         }
 
         // deprecated but needed for old effects to survive upgrading

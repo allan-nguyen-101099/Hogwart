@@ -115,6 +115,7 @@ public class NPC : Photon.MonoBehaviour
     public NamePlate namePlate;
 
 	
+	// Callback: called by Unity once when this NPC is first activated
 	public void Start()
 	{
 		if (Id == 0 || namePlate == null) {
@@ -159,6 +160,7 @@ public class NPC : Photon.MonoBehaviour
         }
     }
 
+    // Callback: called by Unity every frame (runs AI brain: patrol, combat, and aggro checks)
     private void Update()
 	{
         if (isDead)
@@ -177,7 +179,7 @@ public class NPC : Photon.MonoBehaviour
             return;
         }
 
-        // static NPCs like vendors, dont have photonView as they dont perfom any action
+        // static NPCs
         if (!photonView) {
             return;
         }
@@ -187,11 +189,11 @@ public class NPC : Photon.MonoBehaviour
 			transform.rotation = Quaternion.Lerp(transform.rotation, correctPlayerRot, Time.deltaTime * this.SmoothingDelay);
 		}
 
-        if (Application.isEditor) {
-			if (data.subRace != NPCData.creatureSubRace.Normal) {return;} // enable in debug to not verifiy if you are the master
-		} else {
-			if (data.subRace != NPCData.creatureSubRace.Normal || !photonView.isMine) {return;}
-		}
+        // if (Application.isEditor) {
+		// 	if (data.subRace != NPCData.creatureSubRace.Normal) {return;} // enable in debug to not verifiy if you are the master
+		// } else {
+		// 	if (data.subRace != NPCData.creatureSubRace.Normal || !photonView.isMine) {return;}
+		// }
 
         // check if target has died
         if (target && target.GetComponent<Player>().isDead) {
@@ -287,6 +289,7 @@ public class NPC : Photon.MonoBehaviour
         }
 	}
 	
+	// Callback: called by Photon every network tick to sync NPC position and rotation to other clients
 	public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
 	{
 		if (photonView.isMine) {
@@ -307,10 +310,7 @@ public class NPC : Photon.MonoBehaviour
 		}
 	}
 
-    /**
-    * Toggles NPC status and disables some of its components to get better perfomance
-    */
-    public void setEnabled (bool status)
+    public void setEnabled(bool status)
     {
         // already enabled
         if (status && enabled) {
@@ -348,11 +348,7 @@ public class NPC : Photon.MonoBehaviour
 		killNotiSent = false;
     }
 
-	/**
-	 * Points NPC back to initial position
-	 *
-	 */
-	public void gotoInitialPoint ()
+	public void gotoInitialPoint()
     {
         this.changeAnimation(AnimationStates.RUN);
         this.transform.position = Vector3.MoveTowards(this.transform.position, this.initialPos, data.runSpeed * Time.deltaTime);
@@ -367,22 +363,9 @@ public class NPC : Photon.MonoBehaviour
 	{
 		if(spell.spellFlag == Spell.SpellFlag.Slow)
 		{
-			/*
-			 * @ToDo: lower NPC speed
-			originalRunSpeed = data.runSpeed;
-			originalWalkSpeed = data.walkSpeed;
-			data.runSpeed = 1.5f;
-			data.walkSpeed = 0.5f;
-
-			yield return new WaitForSeconds(spell.slowDuration);
-			cont.runSpeed = originalRunSpeed;
-			cont.walkSpeed = originalWalkSpeed;
-			yield break;
-			*/
+			// TBD
 			Debug.Log("Slowed");
-			
 		}
-		
 		else if(spell.spellFlag == Spell.SpellFlag.DamagePerSecond)
 		{
 			if(resetDps && check){
@@ -390,12 +373,9 @@ public class NPC : Photon.MonoBehaviour
 				resetDps = false;
 				StopAllCoroutines();
 			}
-			
 			if(!check)
 				StartCoroutine(DOT(spell.dotDamage, spell.dotTick, spell.dotSeconds, spell.dotEffect, player));
-			
 		}
-		
 		else
 		{
 			Debug.Log("don't have spell flag.");
@@ -404,7 +384,7 @@ public class NPC : Photon.MonoBehaviour
 		
 	}
 	
-	public IEnumerator DOT (int damage, int over, int time, GameObject dotEffect, GameObject player)
+	public IEnumerator DOT(int damage, int over, int time, GameObject dotEffect, GameObject player)
 	{
 		int count = 0;
 		check = true;
@@ -420,7 +400,7 @@ public class NPC : Photon.MonoBehaviour
 		check = false;
 	}
 
-	public void getHit (int damage, GameObject attacker, bool isDPS = false)
+	public void getHit(int damage, GameObject attacker, bool isDPS = false)
     {
 		// @ToDo: start a hit animation
 		health-= damage;
@@ -441,7 +421,7 @@ public class NPC : Photon.MonoBehaviour
         }
     }
 
-	public IEnumerator restoreHealth () {
+	public IEnumerator restoreHealth() {
 		while (this.health < this.maxHealth) {
 			this.health += 10;
 
@@ -456,7 +436,7 @@ public class NPC : Photon.MonoBehaviour
 	/**
 	 * Set NPC target
 	 */
-	public void setTarget (GameObject gameObject) {
+	public void setTarget(GameObject gameObject) {
 
 		// trying to set an invalid target?
 		if (gameObject.tag != "Player" && gameObject.tag != "NPC" || target != null) {
@@ -472,7 +452,7 @@ public class NPC : Photon.MonoBehaviour
 	}
 
 	// Sets this NPC as player's target
-	public void setSelected (bool force = false) {
+	public void setSelected(bool force = false) {
 
 		if (!force && Player.Instance.target != null) {
 			return;
@@ -486,6 +466,7 @@ public class NPC : Photon.MonoBehaviour
 		}
 	}
 
+	// Callback: called by Unity when player clicks on this NPC with the mouse
 	public void OnMouseDown() {
         setSelected(true);
 
@@ -505,11 +486,13 @@ public class NPC : Photon.MonoBehaviour
         }
     }
 
+    // Callback: called internally by OnMouseDown when NPC is clicked (override in Seller, Quester, Talker subclasses)
     public virtual void OnClick()
     {
 
     }
 
+    // Callback: called by Unity every frame while mouse cursor is over this NPC's collider
     public void OnMouseOver()
     {
         Texture2D texture = null;
@@ -537,10 +520,12 @@ public class NPC : Photon.MonoBehaviour
             Cursor.SetCursor(texture, Vector2.zero, CursorMode.Auto);
         }
     }
+    // Callback: called by Unity when mouse cursor enters this NPC's collider
     public void OnMouseEnter()
     {
         OnMouseOver();
     }
+    // Callback: called by Unity when mouse cursor leaves this NPC's collider
     public void OnMouseExit()
     {
         Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);

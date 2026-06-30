@@ -21,6 +21,7 @@ public class ItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         }
     }
 
+    // Callback: called by Unity EventSystem when starts dragging this item
     public void OnBeginDrag(PointerEventData eventData) {
         GamePanel.isMovingAPanel = true;
         isDragging = true;
@@ -30,17 +31,12 @@ public class ItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         Menu.Instance.hideTooltip();
     }
 
-    /**
-		Allows dragging the item through the screen
-		@return void
-	*/
+    // Callback: called by Unity EventSystem every frame while drags this item
     public void OnDrag(PointerEventData eventData) {
         transform.position = Input.mousePosition;
     }
 
-    /**
-		Checks if user wants to throw the item or just move it in the bag
-	*/
+    // Callback: called by Unity EventSystem when releases the drag
     public void OnEndDrag(PointerEventData eventData) {
         GamePanel.isMovingAPanel = false;
         isDragging = false;
@@ -48,7 +44,6 @@ public class ItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         List<RaycastResult> raycastResults = new List<RaycastResult>();
         EventSystem.current.RaycastAll(eventData, raycastResults);
 
-        // try to find an slot
         foreach (RaycastResult raycast in raycastResults) {
             try {
                 Slot slot = raycast.gameObject.GetComponent<Slot>();
@@ -57,7 +52,7 @@ public class ItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
                     resetPosition();
                 } else {
 
-                    // we need to check if this item can be equiped on this slot
+                    // check if this item can be equiped on this slot
                     if (slot.type == Slot.slotType.equipment && !item.isValidEquipmentPosition(slot.subType)) {
                         break;
                     }
@@ -96,6 +91,7 @@ public class ItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     /**
 		Orders to display the tooltip of this item
 	 */
+    // Callback: called by Unity EventSystem when pointer enters this item slot
     public void OnPointerEnter(PointerEventData eventData) {
         if (isDragging || isDeciding) {
             return;
@@ -105,10 +101,12 @@ public class ItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         Menu.Instance.showTooltip(pos, item);
     }
 
+    // Callback: called by Unity EventSystem when pointer exits this item slot
     public void OnPointerExit(PointerEventData eventData) {
         Menu.Instance.hideTooltip();
     }
 
+    // Callback: called by Unity EventSystem when  clicks this item slot
     public void OnPointerClick(PointerEventData data) {
         if (isDragging || data.button != PointerEventData.InputButton.Right) {
             return;
