@@ -1,0 +1,249 @@
+===========================================================
+OPEN HOGWARTS - GAME MECHANICS: INVENTORY & GOLD SYSTEM
+===========================================================
+
+1. HOW TO OPEN INVENTORY
+===========================================================
+
+Hotkey: Press "B" key during gameplay
+Source: PlayerHotkeys.cs (line 45)
+
+Code:
+  if (InputSystemAgent.GetKeyDown("B")) 
+      Menu.Instance.togglePanel("BagPanel");
+
+Result:
+  - Opens the BagPanel (UI panel showing inventory slots)
+  - Displays 5x5 grid of inventory slots (25 total)
+  - Shows current gold at bottom (Galleons/Sickles/Knuts)
+
+
+2. HOW TO CHECK GOLD AMOUNT
+===========================================================
+
+Primary Source: Player.Instance.money
+  - Stores total gold as single integer (Knuts)
+
+Displayed In:
+  - Inventory Panel: Bottom shows formatted amounts
+    * Galleons (10,000 Knuts = 1 Galleon)
+    * Sickles (100 Knuts = 1 Sickle)
+    * Knuts (base currency)
+
+Display Code:
+  Vector3 money = Util.formatMoney(Player.Instance.money);
+  // Returns: x=Galleons, y=Sickles, z=Knuts
+  
+Location in UI:
+  Canvas > BagPanel > GalleonLabel / SickleLabel / KnutLabel
+
+
+3. HOW TO COLLECT GOLD
+===========================================================
+
+Method 1: Direct Money Addition
+  Player.Instance.money += amount;
+  
+  This automatically:
+  - Updates characterData.money in database
+  - Refreshes Inventory UI display
+  - Triggers PlayerPanel.updateBar()
+
+Method 2: Via addItem() when buying items
+  Player.Instance.addItem(itemId, quantity);
+  - Subtracts cost from money via Seller.sellItem()
+
+Method 3: Start game with initial gold
+  CreatePanel.cs sets: character.money = 100 (at character creation)
+
+Triggers:
+  - Database auto-saves via characterData.save()
+  - Inventory panel updates via Inventory.Instance.updateMoney()
+
+
+4. HOW TO SELL/BUY ITEMS WITH GOLD
+===========================================================
+
+BUYING ITEMS:
+
+Step 1: Click on a Seller NPC (Hagrid, shopkeepers, etc.)
+  - NPC must have subRace == "Seller"
+  - Calls NPC.OnClick() → Seller.OnClick()
+
+Step 2: SellerPanel opens automatically
+  - Shows list of available items from database
+  - Each item displays: Name, Price (formatted), Icon
+  - Button shows Buy button (only active if player has enough gold)
+
+Step 3: Click on desired item
+  - SellPanel.selectedItem = tItem (sets selected item)
+  - Checks: if (value.price > Player.Instance.money) → disable Buy button
+
+Step 4: Click "Buy" button
+  Triggers: SellPanel.buyButton()
+  
+  Execution:
+    1. Check if have enough gold: selectedItem.price <= Player.Instance.money
+    2. Play buy sound effect
+    3. Deduct gold: Player.Instance.money -= selectedItem.price
+    4. Add item: Player.Instance.addItem(selectedItem.id)
+    5. Refresh UI: updateMoney()
+
+Source Code: SellPanel.cs (lines 97-106)
+  public void buyButton() {
+      if (selectedItem == null || selectedItem.price > Player.Instance.money) {
+          return;
+      }
+      sound.Play();
+      Player.Instance.money -= selectedItem.price;
+      Player.Instance.addItem(selectedItem.id);
+      updateMoney();
+  }
+
+SELLING ITEMS:
+
+Current Implementation: NOT FULLY IMPLEMENTED
+- No sell button visible in UI yet
+- Placeholder exists but not wired to UI
+
+How it would work (when implemented):
+  1. Right-click item in inventory
+  2. Select "Sell" option
+  3. Receive: item.sellPrice (typically item.price / 2)
+  4. Item removed from inventory
+
+
+5. HOW TO USE ITEMS JUST BOUGHT
+===========================================================
+
+METHOD 1: Drag & Drop to Equipment Slot
+  
+  Step 1: Open Inventory (Press B)
+  Step 2: Right-click on item slot with bought item
+  Step 3: Select option from context menu
+  
+  OR: Drag item to equipment slot
+    - Left-click and drag item
+    - Drop on equipment slot (CharacterPanel)
+    - Item will move if slot is compatible
+    
+  Source: ItemSlot.cs (OnBeginDrag, OnDrag, OnEndDrag)
+
+METHOD 2: Open Context Menu (Right-click)
+  
+  Step 1: Right-click on item in inventory
+  Step 2: Context menu appears with options:
+    - Use / Equip
+    - Drop
+    - Sell (if implemented)
+  
+  Source: ItemSlot.cs (OnPointerClick)
+  
+  Code (line 103-119):
+    public void OnPointerClick(PointerEventData data) {
+        if (isDragging || data.button != PointerEventData.InputButton.Right) {
+            return;
+        }
+        // Shows context menu at item position
+        Inventory.Instance.showOptions(pos, item);
+    }
+
+METHOD 3: Equipment Panel (CharacterPanel)
+  
+  Step 1: Open CharacterPanel (Press C)
+  Step 2: Shows equipped items slots:
+    - Head
+    - Chest
+    - Legs
+    - Hands
+    - Feet
+    - Accessory
+  
+  Step 3: Drag item from inventory into equipment slot
+  Step 4: Item equips if slot accepts that item type
+  
+  Automatic Update:
+    - PlayerEquipment.reload() updates display
+    - Calls PlayerEquipment.Instance.reload()
+
+
+HOTKEYS REFERENCE
+===========================================================
+
+B     → Open Inventory (BagPanel)
+C     → Open Character Panel (Equipment)
+Z     → Toggle all UI panels on/off
+Esc   → Open Config panel
+
+Right-Click    → Context menu on inventory item
+Left-Click     → Drag item for moving
+Double-Click   → (if implemented) Use/equip item
+
+
+GOLD CURRENCY SYSTEM
+===========================================================
+
+Conversion:
+  1 Galleon    = 10,000 Knuts
+  1 Sickle     = 100 Knuts
+  1 Knut       = 1 Knut (smallest unit)
+
+Example:
+  Player has 25,500 Knuts total
+  Displays as: 2 Galleons, 55 Sickles, 0 Knuts
+
+Formatting Code: Util.cs
+  public static Vector3 formatMoney(int money) {
+      int x = money / 10000;              // Galleons
+      int y = (money - (x * 10000)) / 100;// Sickles
+      int z = (money - (x * 10000) - (y * 100)); // Knuts
+      return new Vector3(x, y, z);
+  }
+
+
+DATABASE STORAGE
+===========================================================
+
+Character Money:
+  Table: "characters"
+  Column: "money" (integer, stored as Knuts)
+  Persisted: Yes, auto-saves to iBoxDB
+
+Inventory Items:
+  Table: "inventory"
+  Stores: CharacterItem objects
+  Fields:
+    - item (item ID)
+    - quantity (how many)
+    - character (which player owns)
+    - slot (inventory grid position)
+    - _position (0=bag, 1-6=equipment slots)
+
+
+RELATED FILE LOCATIONS
+===========================================================
+
+Player Money System:
+  - Assets/Scripts/Player/Player.cs (lines 102-114)
+  - Assets/Scripts/Player/CharacterData.cs (line 18: public int money)
+
+Inventory UI:
+  - Assets/Scripts/Inventory/Inventory.cs
+  - Assets/Scripts/Inventory/ItemSlot.cs
+  - Assets/Scripts/Inventory/Slot.cs
+
+Buying/Selling:
+  - Assets/Scripts/UI/Panels/SellPanel.cs
+  - Assets/Scripts/NPC/Seller.cs
+
+Hotkey Controls:
+  - Assets/Scripts/Player/PlayerHotkeys.cs
+
+Formatting:
+  - Assets/Scripts/Util/Util.cs (formatMoney method)
+
+Database:
+  - Assets/Scripts/Util/Service.cs (database access)
+  - Assets/Scripts/Player/CharacterItem.cs (inventory table)
+
+===========================================================
