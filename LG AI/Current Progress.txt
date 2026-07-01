@@ -2,7 +2,7 @@ Curren progress:
     - Online mode (need testing)
     - Change Logo banner (done)
     - Remove Copyright (partial done)
-    - Change name Castillo -> Spider in 2 places (task + target)
+    - Change name Castillo -> Spider in 2 places (done)
     Todo:
     - Learn about Animator
     - Self create 1 character

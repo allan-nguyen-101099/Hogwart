@@ -265,6 +265,7 @@ public class DBSetup : MonoBehaviour {
 
 		npc = NPCTemplate.fillById(NPCData.creatureTemplate.CastleSpider, 5);
 		npc.id = i++; // 2
+        npc.name = "Spider";
 		npc.create ();
 
         waypoints = new List<Vector3>();
@@ -291,28 +292,28 @@ public class DBSetup : MonoBehaviour {
 
         npc = NPCTemplate.fillById(NPCData.creatureTemplate.Human, 40);
         npc.id = i++; // 5
-        npc.name = "Estudiante";
+        npc.name = "Student";
         npc.subRace = NPCData.creatureSubRace.Talker;
         npc.create();
         // END -----------------
 
         npc = NPCTemplate.fillById(NPCData.creatureTemplate.Human, 40);
         npc.id = i++; // 6
-        npc.name = "Estudiante";
+        npc.name = "Student";
         npc.subRace = NPCData.creatureSubRace.Talker;
         npc.create();
         // END -----------------
 
         npc = NPCTemplate.fillById(NPCData.creatureTemplate.Human, 40);
         npc.id = i++; // 7
-        npc.name = "Estudiante";
+        npc.name = "Student";
         npc.subRace = NPCData.creatureSubRace.Talker;
         npc.create();
         // END -----------------
 
         npc = NPCTemplate.fillById(NPCData.creatureTemplate.Human, 40);
         npc.id = i++; // 8
-        npc.name = "Estudiante";
+        npc.name = "Student";
         npc.subRace = NPCData.creatureSubRace.Normal;
         npc.create();
         // END -----------------

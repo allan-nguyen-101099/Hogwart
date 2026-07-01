@@ -135,7 +135,7 @@ public class Task
 
     public void save()
     {
-        // rebuild pharse before saving (as quantity may have changed)
+        // rebuild phrase before saving (as quantity may have changed)
         _phrase = buildPhrase();
         Service.db.Update(TABLE_NAME, this);
     }
